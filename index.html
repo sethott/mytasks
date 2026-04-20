@@ -117,7 +117,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .journal-item-actions{display:flex;justify-content:flex-end;margin-top:10px}
 .btn-tiny{padding:4px 12px;font-size:12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif}
 .btn-tiny:hover{color:#E24B4A;border-color:#E24B4A}
-.loading{text-align:center;padding:60px 0;color:var(--text3);font-size:14px}
 </style>
 </head>
 <body>
@@ -127,10 +126,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <span class="sync-label" id="sync-label">Connexion...</span>
   </div>
   <div class="ws-bar">
-    <button class="ws-btn active" id="ws-vie-btn" onclick="switchWS('vie')">
+    <button class="ws-btn active" id="ws-vie-btn" onclick="APP.switchWS('vie')">
       <span class="dot"></span>Vie personnelle
     </button>
-    <button class="ws-btn" id="ws-work-btn" onclick="switchWS('work')">
+    <button class="ws-btn" id="ws-work-btn" onclick="APP.switchWS('work')">
       <span class="dot"></span>Travail
     </button>
   </div>
@@ -139,7 +138,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="tabs" id="tabs-row"></div>
   </div>
   <div class="panels">
-    <div class="panel active" id="panel-tasks"><div class="loading">Chargement...</div></div>
+    <div class="panel active" id="panel-tasks"></div>
     <div class="panel" id="panel-cats"></div>
     <div class="panel" id="panel-journal"></div>
     <div class="panel" id="panel-history"></div>
@@ -148,7 +147,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, push, remove } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+import { getDatabase, ref, onValue, push, remove } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5ESAf01jLZ_TJlhBN3F4yfdDGuDUeF9M",
@@ -163,156 +162,255 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getDatabase(firebaseApp);
 
-const WS={
-  vie:{name:'Vie personnelle',cats:['urgent','life','shopping','appointments','3d-print'],labels:{urgent:'Urgent',life:'Life',shopping:'Shopping',appointments:'Appointments','3d-print':'3D Print'},dots:{urgent:'#E05050',life:'#D070A0',shopping:'#A070C8',appointments:'#5090D0','3d-print':'#D09040'},pills:{urgent:{bg:'#3D1010',c:'#F09090'},life:{bg:'#3D1030',c:'#F0A0C8'},shopping:{bg:'#28103D',c:'#C0A0F0'},appointments:{bg:'#10203D',c:'#90C0F0'},'3d-print':{bg:'#3D2510',c:'#F0C090'}},journalLabel:'Journal'},
-  work:{name:'Travail',cats:['urgent','tasks','meetings'],labels:{urgent:'Urgent',tasks:'Tasks',meetings:'Meetings'},dots:{urgent:'#E05050',tasks:'#4898E8',meetings:'#48C890'},pills:{urgent:{bg:'#3D1010',c:'#F09090'},tasks:{bg:'#10203D',c:'#90C0F0'},meetings:{bg:'#103D25',c:'#90F0C0'}},journalLabel:'Notes'}
+const WS = {
+  vie: {
+    name: 'Vie personnelle',
+    cats: ['urgent','life','shopping','appointments','3d-print'],
+    labels: {urgent:'Urgent',life:'Life',shopping:'Shopping',appointments:'Appointments','3d-print':'3D Print'},
+    dots: {urgent:'#E05050',life:'#D070A0',shopping:'#A070C8',appointments:'#5090D0','3d-print':'#D09040'},
+    pills: {urgent:{bg:'#3D1010',c:'#F09090'},life:{bg:'#3D1030',c:'#F0A0C8'},shopping:{bg:'#28103D',c:'#C0A0F0'},appointments:{bg:'#10203D',c:'#90C0F0'},'3d-print':{bg:'#3D2510',c:'#F0C090'}},
+    journalLabel: 'Journal'
+  },
+  work: {
+    name: 'Travail',
+    cats: ['urgent','tasks','meetings'],
+    labels: {urgent:'Urgent',tasks:'Tasks',meetings:'Meetings'},
+    dots: {urgent:'#E05050',tasks:'#4898E8',meetings:'#48C890'},
+    pills: {urgent:{bg:'#3D1010',c:'#F09090'},tasks:{bg:'#10203D',c:'#90C0F0'},meetings:{bg:'#103D25',c:'#90F0C0'}},
+    journalLabel: 'Notes'
+  }
 };
 
-let ws='vie', activeTab='tasks';
-let data={vie:{tasks:{},history:{},journal:{}},work:{tasks:{},history:{},journal:{}}};
-let loaded=false;
+let ws = 'vie', activeTab = 'tasks';
+let data = {vie:{tasks:{},history:{},journal:{}},work:{tasks:{},history:{},journal:{}}};
 
-function setSyncStatus(state){
-  const dot=document.getElementById('sync-dot');
-  const lbl=document.getElementById('sync-label');
+function setSyncStatus(state) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
   if(state==='ok'){dot.className='sync-dot';lbl.textContent='Synchronisé'}
   else if(state==='off'){dot.className='sync-dot off';lbl.textContent='Hors ligne'}
   else{dot.className='sync-dot wait';lbl.textContent='Connexion...'}
 }
 
-const dbRef=ref(db,'mytasks');
-onValue(dbRef,(snapshot)=>{
-  const val=snapshot.val();
-  if(val){
-    data.vie=val.vie||{tasks:{},history:{},journal:{}};
-    data.work=val.work||{tasks:{},history:{},journal:{}};
-  }
-  if(!loaded){loaded=true}
-  setSyncStatus('ok');
-  renderTabs();renderAll();
-},(err)=>{setSyncStatus('off')});
-
-function dbPath(workspace,collection){return ref(db,`mytasks/${workspace}/${collection}`)}
-
-function cfg(){return WS[ws]}
-function wsd(){return data[ws]}
-function objToArr(obj){if(!obj)return[];return Object.entries(obj).map(([fbKey,v])=>({...v,fbKey})).sort((a,b)=>b.createdAt-a.createdAt)}
-
-function fmtDate(ts){const d=new Date(ts);return d.toLocaleDateString('fr-CA',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'})}
-function fmtDur(ms){const m=Math.round(ms/60000);if(m<1)return '<1min';if(m<60)return m+'min';const h=Math.floor(m/60),r=m%60;return h+'h'+(r?r+'m':'')}
-function pill(cat){const p=cfg().pills[cat]||{bg:'#2A1A27',c:'#907080'};return `<span class="cat-pill" style="background:${p.bg};color:${p.c}">${cfg().labels[cat]||cat}</span>`}
-
-function switchWS(w){ws=w;activeTab='tasks';const app=document.getElementById('app');app.className='app '+w;const banner=document.getElementById('ws-banner');banner.className='ws-banner '+(w==='vie'?'vie-banner':'work-banner');document.getElementById('ws-title').textContent=cfg().name;document.getElementById('ws-vie-btn').className='ws-btn'+(w==='vie'?' active':'');document.getElementById('ws-work-btn').className='ws-btn'+(w==='work'?' active':'');renderTabs();renderAll()}
-
-function showTab(t){activeTab=t;renderTabs();document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+t).classList.add('active');renderAll()}
-
-function renderTabs(){
-  const tasks=objToArr(wsd().tasks);
-  const journal=objToArr(wsd().journal);
-  const history=objToArr(wsd().history);
-  const jLabel=cfg().journalLabel;
-  const tabs=[{id:'tasks',label:'Tâches',badge:tasks.length},{id:'cats',label:'Par catégorie'},{id:'journal',label:jLabel,badge:journal.length},{id:'history',label:'Historique',badge:history.length}];
-  document.getElementById('tabs-row').innerHTML=tabs.map(t=>{const b=t.badge!=null?`<span class="badge">${t.badge}</span>`:'';return `<div class="tab${activeTab===t.id?' active':''}" onclick="window._showTab('${t.id}')">${t.label}${b}</div>`}).join('')
+function cfg() { return WS[ws]; }
+function wsd() { return data[ws]; }
+function objToArr(obj) {
+  if(!obj) return [];
+  return Object.entries(obj).map(([fbKey,v])=>({...v,fbKey})).sort((a,b)=>b.createdAt-a.createdAt);
+}
+function fmtDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('fr-CA',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtDur(ms) {
+  const m = Math.round(ms/60000);
+  if(m<1) return '<1min';
+  if(m<60) return m+'min';
+  const h=Math.floor(m/60),r=m%60;
+  return h+'h'+(r?r+'m':'');
+}
+function pill(cat) {
+  const p = cfg().pills[cat]||{bg:'#2A1A27',c:'#907080'};
+  return `<span class="cat-pill" style="background:${p.bg};color:${p.c}">${cfg().labels[cat]||cat}</span>`;
 }
 
-window._showTab=showTab;
-window._completeTask=completeTask;
-window._deleteTask=deleteTask;
-window._saveJournal=saveJournal;
-window._deleteJournal=deleteJournal;
-window._addTask=addTask;
-
-async function addTask(){
-  const inp=document.getElementById('task-input'),noteEl=document.getElementById('task-note'),catEl=document.getElementById('cat-sel'),title=inp.value.trim();
-  if(!title)return;
-  setSyncStatus('wait');
-  await push(dbPath(ws,'tasks'),{title,note:noteEl.value.trim(),cat:catEl.value,createdAt:Date.now()});
-  inp.value='';noteEl.value='';
+function switchWS(w) {
+  ws = w; activeTab = 'tasks';
+  document.getElementById('app').className = 'app '+w;
+  document.getElementById('ws-banner').className = 'ws-banner '+(w==='vie'?'vie-banner':'work-banner');
+  document.getElementById('ws-title').textContent = cfg().name;
+  document.getElementById('ws-vie-btn').className = 'ws-btn'+(w==='vie'?' active':'');
+  document.getElementById('ws-work-btn').className = 'ws-btn'+(w==='work'?' active':'');
+  renderTabs(); renderAll();
 }
 
-async function completeTask(fbKey,createdAt){
+function showTab(t) {
+  activeTab = t;
+  renderTabs();
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+  renderAll();
+}
+
+function renderTabs() {
+  const tasks = objToArr(wsd().tasks);
+  const journal = objToArr(wsd().journal);
+  const history = objToArr(wsd().history);
+  const jLabel = cfg().journalLabel;
+  const tabs = [
+    {id:'tasks',label:'Tâches',badge:tasks.length},
+    {id:'cats',label:'Par catégorie'},
+    {id:'journal',label:jLabel,badge:journal.length},
+    {id:'history',label:'Historique',badge:history.length}
+  ];
+  document.getElementById('tabs-row').innerHTML = tabs.map(t=>{
+    const b = t.badge!=null?`<span class="badge">${t.badge}</span>`:'';
+    return `<div class="tab${activeTab===t.id?' active':''}" onclick="APP.showTab('${t.id}')">${t.label}${b}</div>`;
+  }).join('');
+}
+
+async function addTask() {
+  const inp = document.getElementById('task-input');
+  const noteEl = document.getElementById('task-note');
+  const catEl = document.getElementById('cat-sel');
+  const title = inp.value.trim();
+  if(!title) return;
   setSyncStatus('wait');
-  const task=data[ws].tasks[fbKey];
-  if(!task)return;
-  await push(dbPath(ws,'history'),{...task,completedAt:Date.now(),duration:Date.now()-createdAt});
+  await push(ref(db,`mytasks/${ws}/tasks`),{title,note:noteEl.value.trim(),cat:catEl.value,createdAt:Date.now()});
+  inp.value=''; noteEl.value='';
+}
+
+async function completeTask(fbKey, createdAt) {
+  setSyncStatus('wait');
+  const task = data[ws].tasks[fbKey];
+  if(!task) return;
+  await push(ref(db,`mytasks/${ws}/history`),{...task,completedAt:Date.now(),duration:Date.now()-createdAt});
   await remove(ref(db,`mytasks/${ws}/tasks/${fbKey}`));
 }
 
-async function deleteTask(fbKey){
+async function deleteTask(fbKey) {
   setSyncStatus('wait');
   await remove(ref(db,`mytasks/${ws}/tasks/${fbKey}`));
 }
 
-async function saveJournal(){
-  const ta=document.getElementById('journal-ta'),text=ta.value.trim();
-  if(!text)return;
+async function saveJournal() {
+  const ta = document.getElementById('journal-ta');
+  const text = ta.value.trim();
+  if(!text) return;
   setSyncStatus('wait');
-  await push(dbPath(ws,'journal'),{text,createdAt:Date.now()});
+  await push(ref(db,`mytasks/${ws}/journal`),{text,createdAt:Date.now()});
   ta.value='';
 }
 
-async function deleteJournal(fbKey){
+async function deleteJournal(fbKey) {
   setSyncStatus('wait');
   await remove(ref(db,`mytasks/${ws}/journal/${fbKey}`));
 }
 
-function renderTasks(){
-  const el=document.getElementById('panel-tasks');
-  const tasks=objToArr(wsd().tasks);
-  const cats=cfg().cats;
-  const catOptions=cats.map(c=>`<option value="${c}">${cfg().labels[c]}</option>`).join('');
-  let html=`<div class="entry-box"><div class="entry-title-row"><input type="text" id="task-input" placeholder="Nouvelle tâche..." onkeydown="if(event.key==='Enter')window._addTask()"></div><div class="entry-bottom-row"><textarea id="task-note" placeholder="Note ou description (optionnel)..."></textarea><div class="entry-side"><select id="cat-sel" class="cat-sel">${catOptions}</select><button class="btn-add" onclick="window._addTask()">+ Ajouter</button></div></div></div>`;
-  if(!tasks.length){html+='<div class="empty">Aucune tâche active</div>';el.innerHTML=html;return}
-  html+=tasks.map(t=>`<div class="task-item"><div class="chk" onclick="window._completeTask('${t.fbKey}',${t.createdAt})"></div><div class="task-body"><div class="task-title-text">${t.title}</div>${t.note?`<div class="task-note-text">${t.note}</div>`:''}<div class="task-meta">${pill(t.cat)}<span class="task-ts">${fmtDate(t.createdAt)}</span></div></div><span class="task-del" onclick="window._deleteTask('${t.fbKey}')">✕</span></div>`).join('');
-  el.innerHTML=html;
+function renderTasks() {
+  const el = document.getElementById('panel-tasks');
+  const tasks = objToArr(wsd().tasks);
+  const cats = cfg().cats;
+  const catOptions = cats.map(c=>`<option value="${c}">${cfg().labels[c]}</option>`).join('');
+  let html = `<div class="entry-box">
+    <div class="entry-title-row"><input type="text" id="task-input" placeholder="Nouvelle tâche..." onkeydown="if(event.key==='Enter')APP.addTask()"></div>
+    <div class="entry-bottom-row">
+      <textarea id="task-note" placeholder="Note ou description (optionnel)..."></textarea>
+      <div class="entry-side">
+        <select id="cat-sel" class="cat-sel">${catOptions}</select>
+        <button class="btn-add" onclick="APP.addTask()">+ Ajouter</button>
+      </div>
+    </div>
+  </div>`;
+  if(!tasks.length){html+='<div class="empty">Aucune tâche active</div>';el.innerHTML=html;return;}
+  html += tasks.map(t=>`
+    <div class="task-item">
+      <div class="chk" onclick="APP.completeTask('${t.fbKey}',${t.createdAt})"></div>
+      <div class="task-body">
+        <div class="task-title-text">${t.title}</div>
+        ${t.note?`<div class="task-note-text">${t.note}</div>`:''}
+        <div class="task-meta">${pill(t.cat)}<span class="task-ts">${fmtDate(t.createdAt)}</span></div>
+      </div>
+      <span class="task-del" onclick="APP.deleteTask('${t.fbKey}')">✕</span>
+    </div>`).join('');
+  el.innerHTML = html;
 }
 
-function renderCats(){
-  const el=document.getElementById('panel-cats');
-  const tasks=objToArr(wsd().tasks);
-  const cats=cfg().cats;
-  let html=`<div class="cat-cols" style="grid-template-columns:repeat(${cats.length},1fr)">`;
-  for(const cat of cats){
-    const items=tasks.filter(t=>t.cat===cat);
-    const dotColor=cfg().dots[cat]||'#907080';
-    html+=`<div class="cat-col"><div class="cat-col-head"><span class="cat-dot" style="background:${dotColor}"></span><span class="cat-col-name">${cfg().labels[cat]}</span><span class="cat-col-count">${items.length}</span></div><div class="cat-col-body">`;
-    if(!items.length){html+='<div class="col-empty">Vide</div>'}
-    else{html+=items.map(t=>`<div class="task-mini"><div class="task-mini-top"><div class="mini-chk" onclick="window._completeTask('${t.fbKey}',${t.createdAt})"></div><span class="task-mini-title">${t.title}</span><span class="mini-del" onclick="window._deleteTask('${t.fbKey}')">✕</span></div>${t.note?`<div class="task-mini-note">${t.note}</div>`:''}<div class="task-mini-ts">${fmtDate(t.createdAt)}</div></div>`).join('')}
-    html+='</div></div>';
+function renderCats() {
+  const el = document.getElementById('panel-cats');
+  const tasks = objToArr(wsd().tasks);
+  const cats = cfg().cats;
+  let html = `<div class="cat-cols" style="grid-template-columns:repeat(${cats.length},1fr)">`;
+  for(const cat of cats) {
+    const items = tasks.filter(t=>t.cat===cat);
+    const dotColor = cfg().dots[cat]||'#907080';
+    html += `<div class="cat-col">
+      <div class="cat-col-head">
+        <span class="cat-dot" style="background:${dotColor}"></span>
+        <span class="cat-col-name">${cfg().labels[cat]}</span>
+        <span class="cat-col-count">${items.length}</span>
+      </div>
+      <div class="cat-col-body">`;
+    if(!items.length){html+='<div class="col-empty">Vide</div>';}
+    else{html+=items.map(t=>`
+      <div class="task-mini">
+        <div class="task-mini-top">
+          <div class="mini-chk" onclick="APP.completeTask('${t.fbKey}',${t.createdAt})"></div>
+          <span class="task-mini-title">${t.title}</span>
+          <span class="mini-del" onclick="APP.deleteTask('${t.fbKey}')">✕</span>
+        </div>
+        ${t.note?`<div class="task-mini-note">${t.note}</div>`:''}
+        <div class="task-mini-ts">${fmtDate(t.createdAt)}</div>
+      </div>`).join('');}
+    html += '</div></div>';
   }
-  html+='</div>';el.innerHTML=html;
+  html += '</div>';
+  el.innerHTML = html;
 }
 
-function renderJournal(){
-  const el=document.getElementById('panel-journal');
-  const entries=objToArr(wsd().journal);
-  const label=cfg().journalLabel;
-  const now=new Date();
-  const dateStr=now.toLocaleDateString('fr-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  let html=`<div class="journal-entry-box"><textarea id="journal-ta" placeholder="${label==='Notes'?'Ajoute une note, idée ou référence...':'Écris ici... pensées, réflexions du jour.'}" onkeydown="if(event.ctrlKey&&event.key==='Enter')window._saveJournal()"></textarea><div class="journal-footer"><span class="journal-date-lbl">${dateStr} · Ctrl+Enter</span><button class="btn-save" onclick="window._saveJournal()">Sauvegarder</button></div></div>`;
-  if(!entries.length){html+=`<div class="empty">Aucune entrée pour l'instant</div>`;el.innerHTML=html;return}
-  html+='<div class="journal-list">'+entries.map(j=>`<div class="journal-item"><div class="journal-item-date">${fmtDate(j.createdAt)}</div><div class="journal-item-text">${j.text}</div><div class="journal-item-actions"><button class="btn-tiny" onclick="window._deleteJournal('${j.fbKey}')">Supprimer</button></div></div>`).join('')+'</div>';
-  el.innerHTML=html;
+function renderJournal() {
+  const el = document.getElementById('panel-journal');
+  const entries = objToArr(wsd().journal);
+  const label = cfg().journalLabel;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  let html = `<div class="journal-entry-box">
+    <textarea id="journal-ta" placeholder="${label==='Notes'?'Ajoute une note, idée ou référence...':'Écris ici... pensées, réflexions du jour.'}" onkeydown="if(event.ctrlKey&&event.key==='Enter')APP.saveJournal()"></textarea>
+    <div class="journal-footer">
+      <span class="journal-date-lbl">${dateStr} · Ctrl+Enter</span>
+      <button class="btn-save" onclick="APP.saveJournal()">Sauvegarder</button>
+    </div>
+  </div>`;
+  if(!entries.length){html+=`<div class="empty">Aucune entrée pour l'instant</div>`;el.innerHTML=html;return;}
+  html += '<div class="journal-list">'+entries.map(j=>`
+    <div class="journal-item">
+      <div class="journal-item-date">${fmtDate(j.createdAt)}</div>
+      <div class="journal-item-text">${j.text}</div>
+      <div class="journal-item-actions"><button class="btn-tiny" onclick="APP.deleteJournal('${j.fbKey}')">Supprimer</button></div>
+    </div>`).join('')+'</div>';
+  el.innerHTML = html;
 }
 
-function renderHistory(){
-  const el=document.getElementById('panel-history');
-  const hist=objToArr(wsd().history);
-  const today=new Date().toDateString();
-  const todayN=hist.filter(h=>new Date(h.completedAt).toDateString()===today).length;
-  const avg=hist.length?hist.reduce((s,h)=>s+h.duration,0)/hist.length:null;
-  let html=`<div class="stats-grid"><div class="stat-card"><div class="stat-val">${hist.length}</div><div class="stat-lbl">Total complétées</div></div><div class="stat-card"><div class="stat-val">${todayN}</div><div class="stat-lbl">Aujourd'hui</div></div><div class="stat-card"><div class="stat-val">${avg!==null?fmtDur(avg):'—'}</div><div class="stat-lbl">Durée moyenne</div></div></div>`;
-  if(!hist.length){html+='<div class="empty">Aucune tâche complétée</div>';el.innerHTML=html;return}
-  html+=hist.map(h=>`<div class="hist-item"><div class="hist-title">${h.title}</div>${h.note?`<div class="hist-note">${h.note}</div>`:''}<div class="hist-meta">${pill(h.cat)}<span class="dur-pill">${fmtDur(h.duration)}</span><span class="hist-ts">${fmtDate(h.createdAt)} → ${fmtDate(h.completedAt)}</span></div></div>`).join('');
-  el.innerHTML=html;
+function renderHistory() {
+  const el = document.getElementById('panel-history');
+  const hist = objToArr(wsd().history);
+  const today = new Date().toDateString();
+  const todayN = hist.filter(h=>new Date(h.completedAt).toDateString()===today).length;
+  const avg = hist.length ? hist.reduce((s,h)=>s+h.duration,0)/hist.length : null;
+  let html = `<div class="stats-grid">
+    <div class="stat-card"><div class="stat-val">${hist.length}</div><div class="stat-lbl">Total complétées</div></div>
+    <div class="stat-card"><div class="stat-val">${todayN}</div><div class="stat-lbl">Aujourd'hui</div></div>
+    <div class="stat-card"><div class="stat-val">${avg!==null?fmtDur(avg):'—'}</div><div class="stat-lbl">Durée moyenne</div></div>
+  </div>`;
+  if(!hist.length){html+='<div class="empty">Aucune tâche complétée</div>';el.innerHTML=html;return;}
+  html += hist.map(h=>`
+    <div class="hist-item">
+      <div class="hist-title">${h.title}</div>
+      ${h.note?`<div class="hist-note">${h.note}</div>`:''}
+      <div class="hist-meta">${pill(h.cat)}<span class="dur-pill">${fmtDur(h.duration)}</span><span class="hist-ts">${fmtDate(h.createdAt)} → ${fmtDate(h.completedAt)}</span></div>
+    </div>`).join('');
+  el.innerHTML = html;
 }
 
-function renderAll(){
-  if(activeTab==='tasks')renderTasks();
-  else if(activeTab==='cats')renderCats();
-  else if(activeTab==='journal')renderJournal();
-  else if(activeTab==='history')renderHistory();
+function renderAll() {
+  if(activeTab==='tasks') renderTasks();
+  else if(activeTab==='cats') renderCats();
+  else if(activeTab==='journal') renderJournal();
+  else if(activeTab==='history') renderHistory();
 }
+
+window.APP = { switchWS, showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal };
+
+onValue(ref(db,'mytasks'), (snapshot) => {
+  const val = snapshot.val();
+  if(val) {
+    data.vie = val.vie||{tasks:{},history:{},journal:{}};
+    data.work = val.work||{tasks:{},history:{},journal:{}};
+  }
+  setSyncStatus('ok');
+  renderTabs();
+  renderAll();
+}, (err) => { setSyncStatus('off'); });
 
 renderTabs();
 </script>
