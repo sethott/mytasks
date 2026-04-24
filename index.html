@@ -161,28 +161,45 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .btn-tiny:hover{color:var(--red);border-color:var(--red);background:rgba(224,48,48,0.06)}
 
 /* CHECKIN */
-.checkin-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.ci-subtabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:0}
+.ci-subtab{padding:8px 14px;font-size:12.5px;font-weight:500;cursor:pointer;border-radius:7px 7px 0 0;color:var(--text3);transition:all 0.15s;font-family:'Inter',sans-serif;border:1px solid transparent;border-bottom:none;position:relative;bottom:-1px;background:transparent}
+.ci-subtab:hover:not(.active){color:var(--blue);background:rgba(0,112,186,0.06)}
+.ci-subtab.active{background:var(--surface);color:var(--blue-dark);font-weight:600;border-color:var(--blue-mid);border-bottom-color:var(--surface)}
+.ci-subpanel{display:none}.ci-subpanel.active{display:block}
+.checkin-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
 .checkin-card{background:var(--surface);border:1.5px solid var(--blue-mid);border-radius:12px;padding:18px;box-shadow:var(--shadow-sm)}
-.checkin-card-title{font-size:13px;font-weight:600;color:var(--blue-dark);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.checkin-card-title{font-size:13px;font-weight:600;color:var(--blue-dark);margin-bottom:14px}
 .checkin-date-lbl{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:14px}
-.metric-row{margin-bottom:14px}
-.metric-label{font-size:12.5px;color:var(--text2);margin-bottom:6px;display:flex;justify-content:space-between}
-.metric-val-badge{font-size:13px;font-weight:700;color:var(--blue-dark);font-family:'DM Mono',monospace}
-.metric-slider{width:100%;height:6px;border-radius:3px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right,var(--blue) 0%,var(--blue) 50%,var(--border2) 50%,var(--border2) 100%);cursor:pointer;outline:none}
-.metric-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--blue-dark);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,48,135,0.3);cursor:pointer}
-.checkin-btn-row{display:flex;gap:8px;margin-top:4px}
-.btn-checkin-save{flex:1;padding:10px 0;background:var(--blue);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s}
+.ci-field{margin-bottom:12px}
+.ci-field label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500}
+.ci-field input{width:100%;padding:8px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;transition:border-color 0.15s}
+.ci-field input:focus{outline:none;border-color:var(--blue);background:#fff}
+.ci-field input::placeholder{color:var(--text3);font-family:'Inter',sans-serif;font-size:12px}
+.ci-field .ci-hint{font-size:10.5px;color:var(--text3);margin-top:3px}
+.btn-checkin-save{width:100%;padding:10px 0;background:var(--blue);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s;margin-top:4px}
 .btn-checkin-save:hover{background:var(--blue-dark)}
-.checkin-history{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-sm)}
-.checkin-history-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px}
-.checkin-hist-item{display:grid;grid-template-columns:80px repeat(3,1fr) repeat(3,1fr);gap:6px;padding:9px 10px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;align-items:center;font-size:12px}
-.checkin-hist-item:hover{background:var(--blue-light);border-color:var(--blue-mid)}
-.ci-date{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3)}
-.ci-metric{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2)}
-.ci-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.ci-val{font-weight:600;color:var(--text);font-family:'DM Mono',monospace}
-.checkin-hist-head{display:grid;grid-template-columns:80px repeat(3,1fr) repeat(3,1fr);gap:6px;padding:6px 10px;font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
-.weekly-tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;background:var(--blue-light);color:var(--blue-dark);font-weight:600;margin-left:6px}
+.btn-checkin-save.weekly{background:var(--blue-dark)}
+.checkin-table-wrap{overflow-x:auto}
+.checkin-table{width:100%;border-collapse:collapse;font-size:12px}
+.checkin-table th{background:var(--surface2);color:var(--text3);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.checkin-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text2);font-family:'DM Mono',monospace;font-size:12px}
+.checkin-table tr:hover td{background:var(--blue-light)}
+.checkin-table td.ci-num{font-weight:600;color:var(--text)}
+.checkin-table td.ci-good{color:#1A8040;font-weight:700}
+.checkin-table td.ci-ok{color:#806010;font-weight:600}
+.checkin-table td.ci-low{color:#C02020;font-weight:700}
+.weekly-tag{display:inline-block;font-size:9px;padding:1px 5px;border-radius:8px;background:var(--blue-light);color:var(--blue-dark);font-weight:600;margin-left:4px;vertical-align:middle}
+.stat-section{margin-bottom:20px}
+.stat-section-title{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px}
+.stats-grid-2{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat-card-sm{background:var(--surface);border-radius:10px;padding:14px;border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.stat-val-sm{font-size:22px;font-weight:700;color:var(--blue-dark);font-family:'DM Mono',monospace}
+.stat-lbl-sm{font-size:11px;color:var(--text3);margin-top:3px}
+.trend-bar-wrap{margin-top:6px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.trend-bar{height:100%;border-radius:2px;background:var(--blue);transition:width 0.4s}
+.ci-export-row{display:flex;justify-content:flex-end;margin-bottom:10px}
+.btn-export-sm{padding:6px 14px;font-size:12px;font-weight:600;border-radius:7px;border:1.5px solid var(--blue);background:transparent;color:var(--blue);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+.btn-export-sm:hover{background:var(--blue);color:#fff}
 
 /* JOURNAL SIDEBAR */
 .journal-layout{display:flex;gap:14px;height:100%}
@@ -357,18 +374,57 @@ function userDataPath(subpath) {
 
 function startListening() {
   if(dbListener) dbListener();
-  dbListener = onValue(ref(db,`users/${currentUID}`), (snapshot) => {
+  dbListener = onValue(ref(db,`users/${currentUID}`), async (snapshot) => {
     const val = snapshot.val();
     if(val) {
       data.vie = val.vie||{tasks:{},history:{},journal:{},checkin:{}};
       if(!data.vie.checkin) data.vie.checkin = {};
+      // Seed historical data once if checkin is empty
+      if(Object.keys(data.vie.checkin).length === 0) {
+        await seedCheckinData();
+      }
     } else {
       data = {vie:{tasks:{},history:{},journal:{},checkin:{}}};
+      await seedCheckinData();
     }
     setSyncStatus('ok');
     renderTabs();
     renderAll();
   }, () => setSyncStatus('off'));
+}
+
+async function seedCheckinData() {
+  const daily = [
+    {d:'2026-03-30',e:5,p:6,c:8},{d:'2026-03-31',e:6,p:4,c:4},{d:'2026-04-01',e:6,p:4,c:5},
+    {d:'2026-04-02',e:5,p:5,c:4},{d:'2026-04-03',e:5,p:6,c:4},{d:'2026-04-04',e:6,p:7,c:5},
+    {d:'2026-04-05',e:6,p:7,c:6},{d:'2026-04-06',e:4,p:8,c:8},{d:'2026-04-07',e:7,p:9,c:6},
+    {d:'2026-04-08',e:6,p:6,c:5},{d:'2026-04-09',e:6,p:6,c:3},{d:'2026-04-10',e:6,p:6,c:3},
+    {d:'2026-04-11',e:7,p:7,c:5},{d:'2026-04-12',e:4,p:8,c:3},{d:'2026-04-13',e:7,p:8,c:5},
+    {d:'2026-04-14',e:6,p:6,c:7},{d:'2026-04-15',e:5.5,p:6,c:8},{d:'2026-04-16',e:6,p:9,c:8},
+    {d:'2026-04-17',e:5.5,p:9,c:4.5},{d:'2026-04-18',e:3,p:9,c:3.5},{d:'2026-04-19',e:5,p:9,c:4.5},
+    {d:'2026-04-20',e:4,p:8,c:5},{d:'2026-04-21',e:5,p:5,c:6},{d:'2026-04-22',e:5,p:6,c:7},
+    {d:'2026-04-23',e:3,p:6,c:3}
+  ];
+  const weeklyData = [
+    {d:'2026-03-30',r:8,couple:6,poids:263.6},
+    {d:'2026-04-06',r:7,couple:6,poids:259.6},
+    {d:'2026-04-13',r:5,couple:6,poids:258.8},
+    {d:'2026-04-20',r:null,couple:null,poids:257}
+  ];
+  const promises = [];
+  for(const row of daily) {
+    const ts = new Date(row.d+'T12:00:00').getTime();
+    promises.push(push(userDataPath(`${ws}/checkin`),{createdAt:ts,weekly:false,energie:row.e,pensees:row.p,corps:row.c}));
+  }
+  for(const row of weeklyData) {
+    const ts = new Date(row.d+'T08:00:00').getTime();
+    const entry = {createdAt:ts,weekly:true};
+    if(row.r!=null) entry.repos=row.r;
+    if(row.couple!=null) entry.couple=row.couple;
+    if(row.poids!=null) entry.poids=row.poids;
+    promises.push(push(userDataPath(`${ws}/checkin`),entry));
+  }
+  await Promise.all(promises);
 }
 
 function showTab(t) {
@@ -564,6 +620,7 @@ function renderHistory() {
     <div class="stat-card"><div class="stat-val">${avg!==null?fmtDur(avg):'—'}</div><div class="stat-lbl">Durée moyenne</div></div>
   </div>`;
   if(!hist.length){html+='<div class="empty">Aucune tâche complétée</div>';el.innerHTML=html;return;}
+  html += `<div class="ci-export-row"><button class="btn-export-sm" onclick="APP.exportHistoryCSV()">⬇ Export CSV</button></div>`;
   html += hist.map(h=>`
     <div class="hist-item">
       <div class="hist-body">
@@ -576,115 +633,212 @@ function renderHistory() {
   el.innerHTML = html;
 }
 
+let ciSubTab = 'saisie';
+
+function ciColor(val) {
+  if(val==null) return '';
+  if(val>=7) return 'ci-good';
+  if(val>=5) return 'ci-ok';
+  return 'ci-low';
+}
+
 function renderCheckin() {
   const el = document.getElementById('panel-checkin');
-  const entries = objToArr(wsd().checkin||{}).sort((a,b)=>b.createdAt-a.createdAt);
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('fr-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const todayStr = now.toDateString();
-  const alreadyToday = entries.find(e=>new Date(e.createdAt).toDateString()===todayStr);
+  const allEntries = objToArr(wsd().checkin||{}).sort((a,b)=>b.createdAt-a.createdAt);
+  const daily = allEntries.filter(e=>!e.weekly);
+  const weekly = allEntries.filter(e=>e.weekly);
 
-  const sliders = [
-    {key:'energie',emoji:'⚡',label:'Énergie',color:'#E07820'},
-    {key:'pensees',emoji:'🧠',label:'Pensées intenses',color:'#9040C8'},
-    {key:'corps',emoji:'💪',label:'Corps / Bouffe',color:'#1890D0'},
-  ];
-  const weekly = [
-    {key:'repos',emoji:'😴',label:'Repos / Sommeil'},
-    {key:'couple',emoji:'❤️',label:'Couple'},
-    {key:'poids',emoji:'⚖️',label:'Poids (lbs)',max:400,step:0.1,isWeight:true},
+  const subtabs = [
+    {id:'saisie',label:'📝 Saisie'},
+    {id:'journal',label:'📅 Journal quotidien'},
+    {id:'hebdo',label:'📋 Hebdomadaire'},
+    {id:'stats',label:'📊 Statistiques'},
   ];
 
-  function makeSlider(k,emoji,label,color,val=5,max=10,step=0.5,isWeight=false){
-    const pct = isWeight ? 50 : (val/max)*100;
-    return `<div class="metric-row">
-      <div class="metric-label">
-        <span>${emoji} ${label}</span>
-        <span class="metric-val-badge" id="badge-${k}">${val}${isWeight?'lbs':'/10'}</span>
-      </div>
-      <input type="range" class="metric-slider" id="slider-${k}" min="${isWeight?100:0}" max="${max}" step="${step}" value="${val}"
-        style="background:linear-gradient(to right,${color} 0%,${color} ${pct}%,var(--border2) ${pct}%,var(--border2) 100%)"
-        oninput="APP.updateSlider('${k}','${color}',${max},${isWeight})">
-    </div>`;
-  }
+  let html = `<div class="ci-subtabs">${subtabs.map(t=>`
+    <div class="ci-subtab${ciSubTab===t.id?' active':''}" onclick="APP.setCiTab('${t.id}')">${t.label}</div>`).join('')}</div>`;
 
-  const dailySliders = sliders.map(s=>makeSlider(s.key,s.emoji,s.label,s.color)).join('');
-  const weeklySliders = [
-    makeSlider('repos','😴','Repos / Sommeil','#48D48A'),
-    makeSlider('couple','❤️','Couple','#E03060'),
-    makeSlider('poids','⚖️','Poids (lbs)','#8090A0',260,400,0.5,true),
-  ].join('');
-
-  const histHead = `<div class="checkin-hist-head">
-    <span>Date</span><span>⚡ Énergie</span><span>🧠 Pensées</span><span>💪 Corps</span>
-    <span>😴 Repos</span><span>❤️ Couple</span><span>⚖️ Poids</span>
-  </div>`;
-
-  const histRows = entries.slice(0,14).map(e=>{
-    const d = new Date(e.createdAt);
-    const dStr = d.toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
-    const isWeekly = e.weekly;
-    return `<div class="checkin-hist-item">
-      <span class="ci-date">${dStr}${isWeekly?'<span class="weekly-tag">S</span>':''}</span>
-      ${['energie','pensees','corps'].map(k=>`<span class="ci-val">${e[k]!=null?e[k]:'—'}</span>`).join('')}
-      ${['repos','couple'].map(k=>`<span class="ci-val">${e[k]!=null?e[k]:'—'}</span>`).join('')}
-      <span class="ci-val">${e.poids!=null?e.poids+'lbs':'—'}</span>
-    </div>`;
-  }).join('');
-
-  el.innerHTML = `
-    <div class="checkin-layout">
+  // ---- SAISIE ----
+  html += `<div class="ci-subpanel${ciSubTab==='saisie'?' active':''}">
+    <div class="checkin-form-grid">
       <div class="checkin-card">
         <div class="checkin-card-title">📅 Check-in quotidien</div>
-        <div class="checkin-date-lbl">${dateStr}</div>
-        ${alreadyToday?'<div style="padding:8px 0;font-size:13px;color:var(--blue-dark);font-weight:500">✓ Déjà enregistré aujourd\'hui</div>':''}
-        ${dailySliders}
-        <div class="checkin-btn-row">
-          <button class="btn-checkin-save" onclick="APP.saveCheckin(false)">💾 Sauvegarder le jour</button>
-        </div>
+        <div class="checkin-date-lbl">${new Date().toLocaleDateString('fr-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+        <div class="ci-field"><label>⚡ Énergie /10</label><input type="number" id="ci-energie" min="0" max="10" step="0.5" placeholder="ex: 6.5"><div class="ci-hint">Ton niveau d'énergie général</div></div>
+        <div class="ci-field"><label>🧠 Pensées intenses /10</label><input type="number" id="ci-pensees" min="0" max="10" step="0.5" placeholder="ex: 7"><div class="ci-hint">Intensité des pensées / rumination</div></div>
+        <div class="ci-field"><label>💪 Corps / Bouffe /10</label><input type="number" id="ci-corps" min="0" max="10" step="0.5" placeholder="ex: 5"><div class="ci-hint">Comment tu te sens physiquement + alimentation</div></div>
+        <button class="btn-checkin-save" onclick="APP.saveCheckin(false)">💾 Sauvegarder le jour</button>
       </div>
       <div class="checkin-card">
         <div class="checkin-card-title">📋 Check-in hebdomadaire</div>
-        <div class="checkin-date-lbl">Ces données s'ajoutent au check-in du jour (lundi de préférence)</div>
-        ${weeklySliders}
-        <div class="checkin-btn-row">
-          <button class="btn-checkin-save" onclick="APP.saveCheckin(true)" style="background:var(--blue-dark)">💾 Sauvegarder la semaine</button>
-        </div>
+        <div class="checkin-date-lbl">À faire chaque lundi — les données quotidiennes se calculent automatiquement</div>
+        <div class="ci-field"><label>😴 Repos / Sommeil /10</label><input type="number" id="ci-repos" min="0" max="10" step="0.5" placeholder="ex: 7"></div>
+        <div class="ci-field"><label>❤️ Couple /10</label><input type="number" id="ci-couple" min="0" max="10" step="0.5" placeholder="ex: 8"></div>
+        <div class="ci-field"><label>⚖️ Poids (lbs)</label><input type="number" id="ci-poids" min="100" max="400" step="0.1" placeholder="ex: 258.5"></div>
+        <button class="btn-checkin-save weekly" onclick="APP.saveCheckin(true)">💾 Sauvegarder la semaine</button>
       </div>
     </div>
-    <div class="checkin-history">
-      <div class="checkin-history-title">Historique des 14 dernières entrées</div>
-      ${entries.length ? histHead+histRows : '<div class="col-empty">Aucune entrée pour l\'instant</div>'}
+  </div>`;
+
+  // ---- JOURNAL QUOTIDIEN ----
+  function scoreColor(v){ return v==null?'—':`<span class="${ciColor(v)}">${v}</span>`; }
+  const dailyRows = daily.map(e=>{
+    const d = new Date(e.createdAt);
+    const dStr = d.toLocaleDateString('fr-CA',{weekday:'short',month:'short',day:'numeric'});
+    const note = e.energie!=null&&e.pensees!=null&&e.corps!=null ? Math.round(((+e.energie + +e.pensees + +e.corps)/3)*100)/100 : null;
+    return `<tr>
+      <td>${dStr}</td>
+      <td class="ci-num ${ciColor(e.energie)}">${e.energie??'—'}</td>
+      <td class="ci-num ${ciColor(e.pensees)}">${e.pensees??'—'}</td>
+      <td class="ci-num ${ciColor(e.corps)}">${e.corps??'—'}</td>
+      <td class="ci-num ${ciColor(note)}">${note??'—'}</td>
+    </tr>`;
+  }).join('');
+
+  html += `<div class="ci-subpanel${ciSubTab==='journal'?' active':''}">
+    <div class="ci-export-row"><button class="btn-export-sm" onclick="APP.exportCheckinCSV('daily')">⬇ Export CSV</button></div>
+    <div class="checkin-table-wrap"><table class="checkin-table">
+      <thead><tr><th>Date</th><th>⚡ Énergie</th><th>🧠 Pensées</th><th>💪 Corps</th><th>📝 Note moy.</th></tr></thead>
+      <tbody>${daily.length?dailyRows:'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px">Aucune entrée</td></tr>'}</tbody>
+    </table></div>
+  </div>`;
+
+  // ---- HEBDOMADAIRE ----
+  const weeklyRows = weekly.map(e=>{
+    const d = new Date(e.createdAt);
+    const dStr = d.toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+    // find matching daily entries for that week to compute avg
+    const wStart = new Date(e.createdAt); wStart.setHours(0,0,0,0);
+    const wEnd = new Date(wStart); wEnd.setDate(wStart.getDate()+7);
+    const weekDailies = daily.filter(de=>{const t=de.createdAt;return t>=wStart.getTime()&&t<wEnd.getTime();});
+    const avgE = weekDailies.length ? Math.round(weekDailies.reduce((s,d)=>s+(+d.energie||0),0)/weekDailies.length*100)/100 : null;
+    const avgP = weekDailies.length ? Math.round(weekDailies.reduce((s,d)=>s+(+d.pensees||0),0)/weekDailies.length*100)/100 : null;
+    const avgC = weekDailies.length ? Math.round(weekDailies.reduce((s,d)=>s+(+d.corps||0),0)/weekDailies.length*100)/100 : null;
+    return `<tr>
+      <td>${dStr}</td>
+      <td class="ci-num ${ciColor(avgE)}">${avgE??'—'}</td>
+      <td class="ci-num ${ciColor(avgP)}">${avgP??'—'}</td>
+      <td class="ci-num ${ciColor(e.repos)}">${e.repos??'—'}</td>
+      <td class="ci-num ${ciColor(avgC)}">${avgC??'—'}</td>
+      <td class="ci-num ${ciColor(e.couple)}">${e.couple??'—'}</td>
+      <td class="ci-num">${e.poids!=null?e.poids+' lbs':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  html += `<div class="ci-subpanel${ciSubTab==='hebdo'?' active':''}">
+    <div class="ci-export-row"><button class="btn-export-sm" onclick="APP.exportCheckinCSV('weekly')">⬇ Export CSV</button></div>
+    <div class="checkin-table-wrap"><table class="checkin-table">
+      <thead><tr><th>Semaine</th><th>⚡ Énergie moy.</th><th>🧠 Pensées moy.</th><th>😴 Repos</th><th>💪 Corps moy.</th><th>❤️ Couple</th><th>⚖️ Poids</th></tr></thead>
+      <tbody>${weekly.length?weeklyRows:'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">Aucune entrée hebdo</td></tr>'}</tbody>
+    </table></div>
+  </div>`;
+
+  // ---- STATS ----
+  const avgOf = (arr,key) => { const v=arr.filter(e=>e[key]!=null); return v.length?Math.round(v.reduce((s,e)=>s+(+e[key]),0)/v.length*100)/100:null; };
+  const avgEnergie = avgOf(daily,'energie');
+  const avgPensees = avgOf(daily,'pensees');
+  const avgCorps   = avgOf(daily,'corps');
+  const avgRepos   = avgOf(weekly,'repos');
+  const avgCouple  = avgOf(weekly,'couple');
+  const poidsStart = weekly.length ? weekly[weekly.length-1].poids : null;
+  const poidsCur   = weekly.length ? weekly[0].poids : null;
+  const poidsDelta = poidsStart&&poidsCur ? Math.round((poidsCur-poidsStart)*10)/10 : null;
+  const globalAvg  = [avgEnergie,avgPensees,avgCorps,avgRepos,avgCouple].filter(v=>v!=null);
+  const globalScore= globalAvg.length ? Math.round(globalAvg.reduce((s,v)=>s+v,0)/globalAvg.length*100)/100 : null;
+
+  function statCard(val,lbl,suffix=''){
+    const pct = suffix===''&&val!=null ? (val/10)*100 : 50;
+    return `<div class="stat-card-sm">
+      <div class="stat-val-sm ${val!=null?ciColor(val):''}">${val!=null?val+(suffix):'—'}</div>
+      <div class="stat-lbl-sm">${lbl}</div>
+      ${suffix===''&&val!=null?`<div class="trend-bar-wrap"><div class="trend-bar" style="width:${pct}%"></div></div>`:''}
     </div>`;
+  }
+
+  // Last 7 daily entries trend
+  const last7 = daily.slice(0,7).reverse();
+  const trendRows = last7.map(e=>{
+    const note = e.energie!=null&&e.pensees!=null&&e.corps!=null ? Math.round(((+e.energie + +e.pensees + +e.corps)/3)*100)/100 : null;
+    const d = new Date(e.createdAt).toLocaleDateString('fr-CA',{weekday:'short',day:'numeric'});
+    return `<tr><td>${d}</td><td class="ci-num ${ciColor(e.energie)}">${e.energie??'—'}</td><td class="ci-num ${ciColor(e.pensees)}">${e.pensees??'—'}</td><td class="ci-num ${ciColor(e.corps)}">${e.corps??'—'}</td><td class="ci-num ${ciColor(note)}">${note??'—'}</td></tr>`;
+  }).join('');
+
+  html += `<div class="ci-subpanel${ciSubTab==='stats'?' active':''}">
+    <div class="stat-section">
+      <div class="stat-section-title">Moyennes globales (toutes entrées)</div>
+      <div class="stats-grid-2">
+        ${statCard(globalScore,'🏆 Score global')}
+        ${statCard(avgEnergie,'⚡ Énergie moy.')}
+        ${statCard(avgPensees,'🧠 Pensées moy.')}
+        ${statCard(avgCorps,'💪 Corps moy.')}
+        ${statCard(avgRepos,'😴 Repos moy.')}
+        ${statCard(avgCouple,'❤️ Couple moy.')}
+        ${statCard(poidsStart!=null&&poidsCur!=null?poidsCur:null,'⚖️ Poids actuel',' lbs')}
+        ${statCard(poidsDelta!=null?(poidsDelta>0?'+'+poidsDelta:poidsDelta):null,'📉 Variation poids',' lbs')}
+      </div>
+    </div>
+    <div class="stat-section">
+      <div class="stat-section-title">7 derniers jours</div>
+      <div class="checkin-table-wrap"><table class="checkin-table">
+        <thead><tr><th>Date</th><th>⚡ Énergie</th><th>🧠 Pensées</th><th>💪 Corps</th><th>📝 Note</th></tr></thead>
+        <tbody>${last7.length?trendRows:'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px">Pas encore de données</td></tr>'}</tbody>
+      </table></div>
+    </div>
+  </div>`;
+
+  el.innerHTML = html;
 }
 
-async function saveCheckin(weekly) {
-  const get = id => { const el = document.getElementById(id); return el ? parseFloat(el.value) : null; };
-  const entry = {
-    createdAt: Date.now(),
-    weekly: weekly||false,
-    energie: get('slider-energie'),
-    pensees: get('slider-pensees'),
-    corps: get('slider-corps'),
-  };
-  if(weekly) {
-    entry.repos = get('slider-repos');
-    entry.couple = get('slider-couple');
-    entry.poids = get('slider-poids');
+function setCiTab(t) { ciSubTab = t; renderCheckin(); }
+
+async function saveCheckin(isWeekly) {
+  const getVal = id => { const el=document.getElementById(id); if(!el||el.value==='') return null; return parseFloat(el.value); };
+  const entry = { createdAt: Date.now(), weekly: isWeekly };
+  if(!isWeekly) {
+    entry.energie = getVal('ci-energie');
+    entry.pensees  = getVal('ci-pensees');
+    entry.corps    = getVal('ci-corps');
+    if(entry.energie==null&&entry.pensees==null&&entry.corps==null){ alert('Entre au moins une valeur.'); return; }
+  } else {
+    entry.repos  = getVal('ci-repos');
+    entry.couple = getVal('ci-couple');
+    entry.poids  = getVal('ci-poids');
+    if(entry.repos==null&&entry.couple==null&&entry.poids==null){ alert('Entre au moins une valeur.'); return; }
   }
   setSyncStatus('wait');
   await push(userDataPath(`${ws}/checkin`), entry);
+  // clear fields
+  ['ci-energie','ci-pensees','ci-corps','ci-repos','ci-couple','ci-poids'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
 }
 
-function updateSlider(key, color, max, isWeight) {
-  const sl = document.getElementById('slider-'+key);
-  const badge = document.getElementById('badge-'+key);
-  if(!sl||!badge) return;
-  const val = parseFloat(sl.value);
-  badge.textContent = val+(isWeight?'lbs':'/10');
-  const pct = isWeight ? ((val-100)/(max-100))*100 : (val/max)*100;
-  sl.style.background = `linear-gradient(to right,${color} 0%,${color} ${pct}%,var(--border2) ${pct}%,var(--border2) 100%)`;
+function exportCheckinCSV(type) {
+  const allEntries = objToArr(wsd().checkin||{}).sort((a,b)=>b.createdAt-a.createdAt);
+  const entries = type==='weekly' ? allEntries.filter(e=>e.weekly) : allEntries.filter(e=>!e.weekly);
+  if(!entries.length){ alert('Aucune donnée à exporter.'); return; }
+  let rows, filename;
+  if(type==='daily') {
+    rows = [['Date','Énergie','Pensées intenses','Corps / Bouffe','Note moyenne']];
+    entries.forEach(e=>{
+      const d = new Date(e.createdAt).toLocaleDateString('fr-CA');
+      const note = e.energie!=null&&e.pensees!=null&&e.corps!=null ? Math.round(((+e.energie + +e.pensees + +e.corps)/3)*100)/100 : '';
+      rows.push([d,e.energie??'',e.pensees??'',e.corps??'',note]);
+    });
+    filename = 'checkin-quotidien.csv';
+  } else {
+    rows = [['Date semaine','Énergie moy.','Pensées moy.','Repos','Corps moy.','Couple','Poids (lbs)']];
+    entries.forEach(e=>{
+      const d = new Date(e.createdAt).toLocaleDateString('fr-CA');
+      rows.push([d,e.energie??'',e.pensees??'',e.repos??'',e.corps??'',e.couple??'',e.poids??'']);
+    });
+    filename = 'checkin-hebdomadaire.csv';
+  }
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
 }
+
 
 function selectJournal(fbKey) {
   selectedJournalKey = selectedJournalKey === fbKey ? null : fbKey;
@@ -738,7 +892,25 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, updateSlider, selectJournal, exportJournalCSV, deleteHistory };
+function exportHistoryCSV() {
+  const hist = objToArr(wsd().history);
+  if(!hist.length){ alert('Aucun historique à exporter.'); return; }
+  const rows = [['Tâche','Note','Catégorie','Créée le','Complétée le','Durée (min)']];
+  hist.forEach(h=>{
+    const cat = cfg().labels[h.cat]||h.cat;
+    const created = new Date(h.createdAt).toLocaleDateString('fr-CA');
+    const completed = new Date(h.completedAt).toLocaleDateString('fr-CA');
+    const dur = Math.round(h.duration/60000);
+    rows.push([`"${(h.title||'').replace(/"/g,'""')}"`,`"${(h.note||'').replace(/"/g,'""')}"`,cat,created,completed,dur]);
+  });
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='historique-taches.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory };
 </script>
 </body>
 </html>
