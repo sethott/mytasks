@@ -40,7 +40,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* APP SHELL */
 #app-screen{display:none;width:100%;align-items:flex-start;justify-content:center}
-.app{width:100%;max-width:860px;background:var(--surface);border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:calc(100vh - 32px)}
+.app{width:100%;max-width:1200px;background:var(--surface);border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:calc(100vh - 32px)}
 
 /* TOP BAR */
 .top-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:var(--blue-dark)}
@@ -109,7 +109,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .empty{text-align:center;padding:48px 0;color:var(--text3);font-size:14px}
 
 /* CAT COLUMNS */
-.cat-cols{display:grid;gap:12px}
+.cat-cols{display:grid;gap:10px}
 .cat-col{background:var(--surface);border-radius:10px;border:1px solid var(--border);overflow:hidden;min-width:0;box-shadow:var(--shadow-sm)}
 .cat-col-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;background:var(--surface2)}
 .cat-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
@@ -137,7 +137,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .stat-lbl{font-size:12px;color:var(--text3);margin-top:4px}
 
 /* HISTORY */
-.hist-item{padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);margin-bottom:8px}
 .hist-title{font-size:13.5px;color:var(--text3);text-decoration:line-through}
 .hist-note{font-size:12px;color:var(--text3);font-style:italic;margin-top:3px}
 .hist-meta{display:flex;gap:7px;margin-top:6px;flex-wrap:wrap;align-items:center}
@@ -160,6 +159,55 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .journal-item-actions{display:flex;justify-content:flex-end;margin-top:10px}
 .btn-tiny{padding:5px 12px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
 .btn-tiny:hover{color:var(--red);border-color:var(--red);background:rgba(224,48,48,0.06)}
+
+/* CHECKIN */
+.checkin-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.checkin-card{background:var(--surface);border:1.5px solid var(--blue-mid);border-radius:12px;padding:18px;box-shadow:var(--shadow-sm)}
+.checkin-card-title{font-size:13px;font-weight:600;color:var(--blue-dark);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.checkin-date-lbl{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:14px}
+.metric-row{margin-bottom:14px}
+.metric-label{font-size:12.5px;color:var(--text2);margin-bottom:6px;display:flex;justify-content:space-between}
+.metric-val-badge{font-size:13px;font-weight:700;color:var(--blue-dark);font-family:'DM Mono',monospace}
+.metric-slider{width:100%;height:6px;border-radius:3px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right,var(--blue) 0%,var(--blue) 50%,var(--border2) 50%,var(--border2) 100%);cursor:pointer;outline:none}
+.metric-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--blue-dark);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,48,135,0.3);cursor:pointer}
+.checkin-btn-row{display:flex;gap:8px;margin-top:4px}
+.btn-checkin-save{flex:1;padding:10px 0;background:var(--blue);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s}
+.btn-checkin-save:hover{background:var(--blue-dark)}
+.checkin-history{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-sm)}
+.checkin-history-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px}
+.checkin-hist-item{display:grid;grid-template-columns:80px repeat(3,1fr) repeat(3,1fr);gap:6px;padding:9px 10px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;align-items:center;font-size:12px}
+.checkin-hist-item:hover{background:var(--blue-light);border-color:var(--blue-mid)}
+.ci-date{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3)}
+.ci-metric{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2)}
+.ci-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ci-val{font-weight:600;color:var(--text);font-family:'DM Mono',monospace}
+.checkin-hist-head{display:grid;grid-template-columns:80px repeat(3,1fr) repeat(3,1fr);gap:6px;padding:6px 10px;font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.weekly-tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;background:var(--blue-light);color:var(--blue-dark);font-weight:600;margin-left:6px}
+
+/* JOURNAL SIDEBAR */
+.journal-layout{display:flex;gap:14px;height:100%}
+.journal-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px}
+.journal-sidebar{width:200px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.journal-sidebar-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;padding:0 4px;margin-bottom:4px}
+.journal-sidebar-item{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all 0.12s}
+.journal-sidebar-item:hover{border-color:var(--blue);background:var(--blue-light)}
+.journal-sidebar-item.selected{border-color:var(--blue-dark);background:var(--blue-light);font-weight:600}
+.journal-sidebar-date{font-size:10px;color:var(--blue);font-family:'DM Mono',monospace;margin-bottom:3px}
+.journal-sidebar-preview{font-size:11.5px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.journal-export-btn{padding:7px 0;width:100%;background:transparent;border:1.5px solid var(--blue);color:var(--blue);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;margin-top:auto}
+.journal-export-btn:hover{background:var(--blue);color:#fff}
+.journal-reader{background:var(--surface);border:1.5px solid var(--blue-mid);border-radius:12px;padding:20px;box-shadow:var(--shadow-sm);display:none}
+.journal-reader.visible{display:block}
+.journal-reader-date{font-size:11px;color:var(--blue);font-family:'DM Mono',monospace;margin-bottom:10px;font-weight:500}
+.journal-reader-text{font-size:14px;color:var(--text);line-height:1.8;white-space:pre-wrap}
+
+/* HIST DELETE */
+.hist-item{padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);margin-bottom:8px;display:flex;align-items:flex-start;gap:8px;transition:all 0.12s}
+.hist-item:hover{background:var(--blue-light);border-color:var(--blue-mid)}
+.hist-body{flex:1;min-width:0}
+.hist-del-btn{flex-shrink:0;width:24px;height:24px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--text3);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;opacity:0;transition:all 0.12s;margin-top:1px}
+.hist-item:hover .hist-del-btn{opacity:1}
+.hist-del-btn:hover{color:var(--red);background:rgba(224,48,48,0.08);border-color:rgba(224,48,48,0.2)}
 
 /* MOBILE */
 @media(max-width:600px){
@@ -228,6 +276,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="panel" id="panel-cats"></div>
       <div class="panel" id="panel-journal"></div>
       <div class="panel" id="panel-history"></div>
+      <div class="panel" id="panel-checkin"></div>
     </div>
   </div>
 </div>
@@ -270,7 +319,8 @@ const WS = {
 };
 
 let ws = 'vie', activeTab = 'tasks', currentUID = null, dbListener = null;
-let data = {vie:{tasks:{},history:{},journal:{}}};
+let data = {vie:{tasks:{},history:{},journal:{},checkin:{}}};
+let selectedJournalKey = null;
 
 function setSyncStatus(state) {
   const dot = document.getElementById('sync-dot');
@@ -310,9 +360,10 @@ function startListening() {
   dbListener = onValue(ref(db,`users/${currentUID}`), (snapshot) => {
     const val = snapshot.val();
     if(val) {
-      data.vie = val.vie||{tasks:{},history:{},journal:{}};
+      data.vie = val.vie||{tasks:{},history:{},journal:{},checkin:{}};
+      if(!data.vie.checkin) data.vie.checkin = {};
     } else {
-      data = {vie:{tasks:{},history:{},journal:{}}};
+      data = {vie:{tasks:{},history:{},journal:{},checkin:{}}};
     }
     setSyncStatus('ok');
     renderTabs();
@@ -332,10 +383,12 @@ function renderTabs() {
   const tasks = objToArr(wsd().tasks);
   const journal = objToArr(wsd().journal);
   const history = objToArr(wsd().history);
+  const checkin = objToArr(wsd().checkin||{});
   const jLabel = cfg().journalLabel;
   const tabs = [
     {id:'tasks',label:'Tâches',badge:tasks.length},
     {id:'cats',label:'Par catégorie'},
+    {id:'checkin',label:'Check-in',badge:checkin.length||null},
     {id:'journal',label:jLabel,badge:journal.length},
     {id:'history',label:'Historique',badge:history.length}
   ];
@@ -426,7 +479,7 @@ function renderCats() {
   const el = document.getElementById('panel-cats');
   const tasks = objToArr(wsd().tasks);
   const cats = cfg().cats;
-  let html = `<div class="cat-cols" style="grid-template-columns:repeat(${Math.min(cats.length,3)},1fr)">`;
+  let html = `<div class="cat-cols" style="grid-template-columns:repeat(${cats.length},1fr)">`;
   for(const cat of cats) {
     const items = tasks.filter(t=>t.cat===cat);
     const dotColor = cfg().dots[cat]||'#8090A0';
@@ -457,23 +510,45 @@ function renderCats() {
 function renderJournal() {
   const el = document.getElementById('panel-journal');
   const entries = objToArr(wsd().journal);
-  const label = cfg().journalLabel;
   const now = new Date();
   const dateStr = now.toLocaleDateString('fr-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  let html = `<div class="journal-entry-box">
-    <textarea id="journal-ta" placeholder="Écris ici... pensées, réflexions du jour." onkeydown="if(event.ctrlKey&&event.key==='Enter')APP.saveJournal()"></textarea>
-    <div class="journal-footer">
-      <span class="journal-date-lbl">${dateStr} · Ctrl+Enter</span>
-      <button class="btn-save" onclick="APP.saveJournal()">Sauvegarder</button>
+
+  // sidebar entries
+  let sidebarHtml = '';
+  if(entries.length) {
+    sidebarHtml = entries.map(j=>`
+      <div class="journal-sidebar-item${selectedJournalKey===j.fbKey?' selected':''}" onclick="APP.selectJournal('${j.fbKey}')">
+        <div class="journal-sidebar-date">${fmtDate(j.createdAt)}</div>
+        <div class="journal-sidebar-preview">${j.text.replace(/</g,'&lt;').substring(0,60)}</div>
+      </div>`).join('');
+  }
+
+  // reader panel
+  const selected = entries.find(j=>j.fbKey===selectedJournalKey);
+  const readerHtml = selected ? `
+    <div class="journal-reader visible">
+      <div class="journal-reader-date">${fmtDate(selected.createdAt)}</div>
+      <div class="journal-reader-text">${selected.text.replace(/</g,'&lt;')}</div>
+    </div>` : '';
+
+  const html = `<div class="journal-layout">
+    <div class="journal-main">
+      <div class="journal-entry-box">
+        <textarea id="journal-ta" placeholder="Écris ici... pensées, réflexions du jour." onkeydown="if(event.ctrlKey&&event.key==='Enter')APP.saveJournal()"></textarea>
+        <div class="journal-footer">
+          <span class="journal-date-lbl">${dateStr} · Ctrl+Enter</span>
+          <button class="btn-save" onclick="APP.saveJournal()">Sauvegarder</button>
+        </div>
+      </div>
+      ${readerHtml}
+      ${!entries.length?'<div class="empty">Aucune entrée pour l\'instant</div>':''}
+    </div>
+    <div class="journal-sidebar">
+      <div class="journal-sidebar-title">Mes entrées</div>
+      ${sidebarHtml}
+      ${entries.length?`<button class="journal-export-btn" onclick="APP.exportJournalCSV()">⬇ Export CSV</button>`:''}
     </div>
   </div>`;
-  if(!entries.length){html+=`<div class="empty">Aucune entrée pour l'instant</div>`;el.innerHTML=html;return;}
-  html += '<div class="journal-list">'+entries.map(j=>`
-    <div class="journal-item">
-      <div class="journal-item-date">${fmtDate(j.createdAt)}</div>
-      <div class="journal-item-text">${j.text}</div>
-      <div class="journal-item-actions"><button class="btn-tiny" onclick="APP.deleteJournal('${j.fbKey}')">Supprimer</button></div>
-    </div>`).join('')+'</div>';
   el.innerHTML = html;
 }
 
@@ -491,18 +566,159 @@ function renderHistory() {
   if(!hist.length){html+='<div class="empty">Aucune tâche complétée</div>';el.innerHTML=html;return;}
   html += hist.map(h=>`
     <div class="hist-item">
-      <div class="hist-title">${h.title}</div>
-      ${h.note?`<div class="hist-note">${h.note}</div>`:''}
-      <div class="hist-meta">${pill(h.cat)}<span class="dur-pill">${fmtDur(h.duration)}</span><span class="hist-ts">${fmtDate(h.createdAt)} → ${fmtDate(h.completedAt)}</span></div>
+      <div class="hist-body">
+        <div class="hist-title">${h.title}</div>
+        ${h.note?`<div class="hist-note">${h.note}</div>`:''}
+        <div class="hist-meta">${pill(h.cat)}<span class="dur-pill">${fmtDur(h.duration)}</span><span class="hist-ts">${fmtDate(h.createdAt)} → ${fmtDate(h.completedAt)}</span></div>
+      </div>
+      <button class="hist-del-btn" onclick="APP.deleteHistory('${h.fbKey}')" title="Supprimer">✕</button>
     </div>`).join('');
   el.innerHTML = html;
 }
 
-function renderAll() {
+function renderCheckin() {
+  const el = document.getElementById('panel-checkin');
+  const entries = objToArr(wsd().checkin||{}).sort((a,b)=>b.createdAt-a.createdAt);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const todayStr = now.toDateString();
+  const alreadyToday = entries.find(e=>new Date(e.createdAt).toDateString()===todayStr);
+
+  const sliders = [
+    {key:'energie',emoji:'⚡',label:'Énergie',color:'#E07820'},
+    {key:'pensees',emoji:'🧠',label:'Pensées intenses',color:'#9040C8'},
+    {key:'corps',emoji:'💪',label:'Corps / Bouffe',color:'#1890D0'},
+  ];
+  const weekly = [
+    {key:'repos',emoji:'😴',label:'Repos / Sommeil'},
+    {key:'couple',emoji:'❤️',label:'Couple'},
+    {key:'poids',emoji:'⚖️',label:'Poids (lbs)',max:400,step:0.1,isWeight:true},
+  ];
+
+  function makeSlider(k,emoji,label,color,val=5,max=10,step=0.5,isWeight=false){
+    const pct = isWeight ? 50 : (val/max)*100;
+    return `<div class="metric-row">
+      <div class="metric-label">
+        <span>${emoji} ${label}</span>
+        <span class="metric-val-badge" id="badge-${k}">${val}${isWeight?'lbs':'/10'}</span>
+      </div>
+      <input type="range" class="metric-slider" id="slider-${k}" min="${isWeight?100:0}" max="${max}" step="${step}" value="${val}"
+        style="background:linear-gradient(to right,${color} 0%,${color} ${pct}%,var(--border2) ${pct}%,var(--border2) 100%)"
+        oninput="APP.updateSlider('${k}','${color}',${max},${isWeight})">
+    </div>`;
+  }
+
+  const dailySliders = sliders.map(s=>makeSlider(s.key,s.emoji,s.label,s.color)).join('');
+  const weeklySliders = [
+    makeSlider('repos','😴','Repos / Sommeil','#48D48A'),
+    makeSlider('couple','❤️','Couple','#E03060'),
+    makeSlider('poids','⚖️','Poids (lbs)','#8090A0',260,400,0.5,true),
+  ].join('');
+
+  const histHead = `<div class="checkin-hist-head">
+    <span>Date</span><span>⚡ Énergie</span><span>🧠 Pensées</span><span>💪 Corps</span>
+    <span>😴 Repos</span><span>❤️ Couple</span><span>⚖️ Poids</span>
+  </div>`;
+
+  const histRows = entries.slice(0,14).map(e=>{
+    const d = new Date(e.createdAt);
+    const dStr = d.toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+    const isWeekly = e.weekly;
+    return `<div class="checkin-hist-item">
+      <span class="ci-date">${dStr}${isWeekly?'<span class="weekly-tag">S</span>':''}</span>
+      ${['energie','pensees','corps'].map(k=>`<span class="ci-val">${e[k]!=null?e[k]:'—'}</span>`).join('')}
+      ${['repos','couple'].map(k=>`<span class="ci-val">${e[k]!=null?e[k]:'—'}</span>`).join('')}
+      <span class="ci-val">${e.poids!=null?e.poids+'lbs':'—'}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="checkin-layout">
+      <div class="checkin-card">
+        <div class="checkin-card-title">📅 Check-in quotidien</div>
+        <div class="checkin-date-lbl">${dateStr}</div>
+        ${alreadyToday?'<div style="padding:8px 0;font-size:13px;color:var(--blue-dark);font-weight:500">✓ Déjà enregistré aujourd\'hui</div>':''}
+        ${dailySliders}
+        <div class="checkin-btn-row">
+          <button class="btn-checkin-save" onclick="APP.saveCheckin(false)">💾 Sauvegarder le jour</button>
+        </div>
+      </div>
+      <div class="checkin-card">
+        <div class="checkin-card-title">📋 Check-in hebdomadaire</div>
+        <div class="checkin-date-lbl">Ces données s'ajoutent au check-in du jour (lundi de préférence)</div>
+        ${weeklySliders}
+        <div class="checkin-btn-row">
+          <button class="btn-checkin-save" onclick="APP.saveCheckin(true)" style="background:var(--blue-dark)">💾 Sauvegarder la semaine</button>
+        </div>
+      </div>
+    </div>
+    <div class="checkin-history">
+      <div class="checkin-history-title">Historique des 14 dernières entrées</div>
+      ${entries.length ? histHead+histRows : '<div class="col-empty">Aucune entrée pour l\'instant</div>'}
+    </div>`;
+}
+
+async function saveCheckin(weekly) {
+  const get = id => { const el = document.getElementById(id); return el ? parseFloat(el.value) : null; };
+  const entry = {
+    createdAt: Date.now(),
+    weekly: weekly||false,
+    energie: get('slider-energie'),
+    pensees: get('slider-pensees'),
+    corps: get('slider-corps'),
+  };
+  if(weekly) {
+    entry.repos = get('slider-repos');
+    entry.couple = get('slider-couple');
+    entry.poids = get('slider-poids');
+  }
+  setSyncStatus('wait');
+  await push(userDataPath(`${ws}/checkin`), entry);
+}
+
+function updateSlider(key, color, max, isWeight) {
+  const sl = document.getElementById('slider-'+key);
+  const badge = document.getElementById('badge-'+key);
+  if(!sl||!badge) return;
+  const val = parseFloat(sl.value);
+  badge.textContent = val+(isWeight?'lbs':'/10');
+  const pct = isWeight ? ((val-100)/(max-100))*100 : (val/max)*100;
+  sl.style.background = `linear-gradient(to right,${color} 0%,${color} ${pct}%,var(--border2) ${pct}%,var(--border2) 100%)`;
+}
+
+function selectJournal(fbKey) {
+  selectedJournalKey = selectedJournalKey === fbKey ? null : fbKey;
+  renderJournal();
+}
+
+function exportJournalCSV() {
+  const entries = objToArr(wsd().journal);
+  if(!entries.length) return;
+  const rows = [['Date','Texte']];
+  entries.forEach(j=>{
+    const d = new Date(j.createdAt).toLocaleDateString('fr-CA');
+    rows.push([d, '"'+j.text.replace(/"/g,'""')+'"']);
+  });
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='journal.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function deleteHistory(fbKey) {
+  if(!confirm('Supprimer cette tâche de l\'historique ?')) return;
+  setSyncStatus('wait');
+  await remove(ref(db,`users/${currentUID}/${ws}/history/${fbKey}`));
+}
+
+
   if(activeTab==='tasks') renderTasks();
   else if(activeTab==='cats') renderCats();
   else if(activeTab==='journal') renderJournal();
   else if(activeTab==='history') renderHistory();
+  else if(activeTab==='checkin') renderCheckin();
 }
 
 onAuthStateChanged(auth, (user) => {
@@ -521,7 +737,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout };
+window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, updateSlider, selectJournal, exportJournalCSV, deleteHistory };
 </script>
 </body>
 </html>
