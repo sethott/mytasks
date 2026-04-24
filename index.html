@@ -661,10 +661,12 @@ function renderCheckin() {
     <div class="ci-subtab${ciSubTab===t.id?' active':''}" onclick="APP.setCiTab('${t.id}')">${t.label}</div>`).join('')}</div>`;
 
   const seeded = data._flags && data._flags.checkinSeeded;
+  const checkinEmpty = Object.keys(data.vie.checkin||{}).length === 0;
+  const showImport = !seeded || checkinEmpty;
   // ---- SAISIE ----
   const todayISO = new Date().toISOString().split('T')[0];
   html += `<div class="ci-subpanel${ciSubTab==='saisie'?' active':''}">
-    ${!seeded ? `<div style="background:#FFF8E8;border:1.5px solid #F0C040;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    ${showImport ? `<div style="background:#FFF8E8;border:1.5px solid #F0C040;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
       <div style="font-size:13px;color:#6A4A00;">📥 <strong>Import données Excel</strong> — 25 entrées quotidiennes + 4 hebdomadaires du fichier Checkin_1.xlsx</div>
       <button onclick="APP.seedCheckinData()" style="flex-shrink:0;padding:8px 16px;background:#0070BA;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Importer</button>
     </div>` : ''}
@@ -806,6 +808,7 @@ async function saveCheckin(isWeekly) {
   const dateVal = dateEl ? dateEl.value : null;
   const ts = dateVal ? new Date(dateVal+'T12:00:00').getTime() : Date.now();
   const entry = { createdAt: ts, weekly: isWeekly };
+
   if(!isWeekly) {
     entry.energie = getVal('ci-energie');
     entry.pensees  = getVal('ci-pensees');
@@ -816,7 +819,22 @@ async function saveCheckin(isWeekly) {
     entry.couple = getVal('ci-couple');
     entry.poids  = getVal('ci-poids');
     if(entry.repos==null&&entry.couple==null&&entry.poids==null){ alert('Entre au moins une valeur.'); return; }
+
+    // Auto-compute averages from the 7 daily entries closest before the selected date
+    const allDaily = objToArr(wsd().checkin||{})
+      .filter(e=>!e.weekly && e.createdAt <= ts)
+      .sort((a,b)=>b.createdAt-a.createdAt)
+      .slice(0,7);
+
+    const avg = key => {
+      const vals = allDaily.filter(e=>e[key]!=null);
+      return vals.length ? Math.round(vals.reduce((s,e)=>s+(+e[key]),0)/vals.length*100)/100 : null;
+    };
+    entry.energie = avg('energie');
+    entry.pensees  = avg('pensees');
+    entry.corps    = avg('corps');
   }
+
   setSyncStatus('wait');
   await push(userDataPath(`${ws}/checkin`), entry);
   ['ci-energie','ci-pensees','ci-corps','ci-repos','ci-couple','ci-poids'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
