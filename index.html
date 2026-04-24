@@ -302,7 +302,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getDatabase, ref, onValue, push, remove } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+import { getDatabase, ref, onValue, push, remove, set as fbSet } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -338,7 +338,7 @@ const WS = {
 };
 
 let ws = 'vie', activeTab = 'tasks', currentUID = null, dbListener = null;
-let data = {vie:{tasks:{},history:{},journal:{},checkin:{}}};
+let data = {vie:{tasks:{},history:{},journal:{},checkin:{}}, _flags:{}};
 let selectedJournalKey = null;
 
 function setSyncStatus(state) {
@@ -374,8 +374,6 @@ function userDataPath(subpath) {
   return ref(db, `users/${currentUID}/${subpath}`);
 }
 
-let seedDone = false;
-
 function startListening() {
   if(dbListener) dbListener();
   dbListener = onValue(ref(db,`users/${currentUID}`), (snapshot) => {
@@ -383,23 +381,20 @@ function startListening() {
     if(val) {
       data.vie = val.vie||{tasks:{},history:{},journal:{},checkin:{}};
       if(!data.vie.checkin) data.vie.checkin = {};
+      data._flags = val._flags||{};
     } else {
       data = {vie:{tasks:{},history:{},journal:{},checkin:{}}};
+      data._flags = {};
     }
     setSyncStatus('ok');
     renderTabs();
     renderAll();
-    // Seed once after first snapshot received, only if checkin empty
-    if(!seedDone) {
-      seedDone = true;
-      if(Object.keys(data.vie.checkin).length === 0) {
-        seedCheckinData();
-      }
-    }
   }, () => setSyncStatus('off'));
 }
 
 async function seedCheckinData() {
+  // Write flag first to prevent double-import
+  await fbSet(ref(db,`users/${currentUID}/_flags/checkinSeeded`), true);
   const daily = [
     {d:'2026-03-30',e:5,p:6,c:8},{d:'2026-03-31',e:6,p:4,c:4},{d:'2026-04-01',e:6,p:4,c:5},
     {d:'2026-04-02',e:5,p:5,c:4},{d:'2026-04-03',e:5,p:6,c:4},{d:'2026-04-04',e:6,p:7,c:5},
@@ -449,7 +444,7 @@ function renderTabs() {
   const jLabel = cfg().journalLabel;
   const tabs = [
     {id:'tasks',label:'Tâches',badge:tasks.length},
-    {id:'cats',label:'Par catégorie'},
+    {id:'cats',label:'Par catégorie',badge:tasks.length||null},
     {id:'checkin',label:'Check-in',badge:checkin.length||null},
     {id:'journal',label:jLabel,badge:journal.length},
     {id:'history',label:'Historique',badge:history.length}
@@ -665,13 +660,14 @@ function renderCheckin() {
   let html = `<div class="ci-subtabs">${subtabs.map(t=>`
     <div class="ci-subtab${ciSubTab===t.id?' active':''}" onclick="APP.setCiTab('${t.id}')">${t.label}</div>`).join('')}</div>`;
 
+  const seeded = data._flags && data._flags.checkinSeeded;
   // ---- SAISIE ----
   const todayISO = new Date().toISOString().split('T')[0];
   html += `<div class="ci-subpanel${ciSubTab==='saisie'?' active':''}">
-    <div style="background:#FFF8E8;border:1.5px solid #F0C040;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    ${!seeded ? `<div style="background:#FFF8E8;border:1.5px solid #F0C040;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
       <div style="font-size:13px;color:#6A4A00;">📥 <strong>Import données Excel</strong> — 25 entrées quotidiennes + 4 hebdomadaires du fichier Checkin_1.xlsx</div>
       <button onclick="APP.seedCheckinData()" style="flex-shrink:0;padding:8px 16px;background:#0070BA;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Importer</button>
-    </div>
+    </div>` : ''}
     <div class="checkin-form-grid">
       <div class="checkin-card">
         <div class="checkin-card-title">📅 Check-in quotidien</div>
@@ -827,7 +823,6 @@ async function saveCheckin(isWeekly) {
 }
 
 async function deleteCheckin(fbKey) {
-  if(!confirm('Supprimer cette entrée ?')) return;
   setSyncStatus('wait');
   await remove(ref(db,`users/${currentUID}/${ws}/checkin/${fbKey}`));
 }
@@ -883,7 +878,6 @@ function exportJournalCSV() {
 }
 
 async function deleteHistory(fbKey) {
-  if(!confirm('Supprimer cette tâche de l\'historique ?')) return;
   setSyncStatus('wait');
   await remove(ref(db,`users/${currentUID}/${ws}/history/${fbKey}`));
 }
@@ -907,7 +901,7 @@ onAuthStateChanged(auth, (user) => {
     startListening();
   } else {
     currentUID = null;
-    data = {vie:{tasks:{},history:{},journal:{}}};
+    data = {vie:{tasks:{},history:{},journal:{}}, _flags:{}};
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app-screen').style.display = 'none';
   }
