@@ -200,6 +200,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ci-export-row{display:flex;justify-content:flex-end;margin-bottom:10px}
 .btn-export-sm{padding:6px 14px;font-size:12px;font-weight:600;border-radius:7px;border:1.5px solid var(--blue);background:transparent;color:var(--blue);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
 .btn-export-sm:hover{background:var(--blue);color:#fff}
+.ci-del-btn{width:22px;height:22px;border-radius:5px;border:1px solid transparent;background:transparent;color:var(--text3);cursor:pointer;font-size:12px;line-height:1;transition:all 0.12s;padding:0}
+.ci-del-btn:hover{color:var(--red);background:rgba(224,48,48,0.08);border-color:rgba(224,48,48,0.2)}
 
 /* JOURNAL SIDEBAR */
 .journal-layout{display:flex;gap:14px;height:100%}
@@ -664,15 +666,16 @@ function renderCheckin() {
     <div class="ci-subtab${ciSubTab===t.id?' active':''}" onclick="APP.setCiTab('${t.id}')">${t.label}</div>`).join('')}</div>`;
 
   // ---- SAISIE ----
+  const todayISO = new Date().toISOString().split('T')[0];
   html += `<div class="ci-subpanel${ciSubTab==='saisie'?' active':''}">
-    ${!hasData ? `<div style="background:#FFF8E8;border:1.5px solid #F0C040;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-      <div style="font-size:13px;color:#6A4A00;"><strong>📥 Aucune donnée trouvée.</strong> Importe tes données historiques du fichier Excel.</div>
-      <button onclick="APP.seedCheckinData()" style="flex-shrink:0;padding:8px 16px;background:#0070BA;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Importer les données Excel</button>
-    </div>` : ''}
+    <div style="background:#FFF8E8;border:1.5px solid #F0C040;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="font-size:13px;color:#6A4A00;">📥 <strong>Import données Excel</strong> — 25 entrées quotidiennes + 4 hebdomadaires du fichier Checkin_1.xlsx</div>
+      <button onclick="APP.seedCheckinData()" style="flex-shrink:0;padding:8px 16px;background:#0070BA;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Importer</button>
+    </div>
     <div class="checkin-form-grid">
       <div class="checkin-card">
         <div class="checkin-card-title">📅 Check-in quotidien</div>
-        <div class="checkin-date-lbl">${new Date().toLocaleDateString('fr-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+        <div class="ci-field"><label>📆 Date</label><input type="date" id="ci-date-daily" value="${todayISO}"></div>
         <div class="ci-field"><label>⚡ Énergie /10</label><input type="number" id="ci-energie" min="0" max="10" step="0.5" placeholder="ex: 6.5"><div class="ci-hint">Ton niveau d'énergie général</div></div>
         <div class="ci-field"><label>🧠 Pensées intenses /10</label><input type="number" id="ci-pensees" min="0" max="10" step="0.5" placeholder="ex: 7"><div class="ci-hint">Intensité des pensées / rumination</div></div>
         <div class="ci-field"><label>💪 Corps / Bouffe /10</label><input type="number" id="ci-corps" min="0" max="10" step="0.5" placeholder="ex: 5"><div class="ci-hint">Comment tu te sens physiquement + alimentation</div></div>
@@ -680,7 +683,7 @@ function renderCheckin() {
       </div>
       <div class="checkin-card">
         <div class="checkin-card-title">📋 Check-in hebdomadaire</div>
-        <div class="checkin-date-lbl">À faire chaque lundi — les données quotidiennes se calculent automatiquement</div>
+        <div class="ci-field"><label>📆 Date (début de semaine)</label><input type="date" id="ci-date-weekly" value="${todayISO}"></div>
         <div class="ci-field"><label>😴 Repos / Sommeil /10</label><input type="number" id="ci-repos" min="0" max="10" step="0.5" placeholder="ex: 7"></div>
         <div class="ci-field"><label>❤️ Couple /10</label><input type="number" id="ci-couple" min="0" max="10" step="0.5" placeholder="ex: 8"></div>
         <div class="ci-field"><label>⚖️ Poids (lbs)</label><input type="number" id="ci-poids" min="100" max="400" step="0.1" placeholder="ex: 258.5"></div>
@@ -701,14 +704,15 @@ function renderCheckin() {
       <td class="ci-num ${ciColor(e.pensees)}">${e.pensees??'—'}</td>
       <td class="ci-num ${ciColor(e.corps)}">${e.corps??'—'}</td>
       <td class="ci-num ${ciColor(note)}">${note??'—'}</td>
+      <td><button class="ci-del-btn" onclick="APP.deleteCheckin('${e.fbKey}')" title="Supprimer">✕</button></td>
     </tr>`;
   }).join('');
 
   html += `<div class="ci-subpanel${ciSubTab==='journal'?' active':''}">
     <div class="ci-export-row"><button class="btn-export-sm" onclick="APP.exportCheckinCSV('daily')">⬇ Export CSV</button></div>
     <div class="checkin-table-wrap"><table class="checkin-table">
-      <thead><tr><th>Date</th><th>⚡ Énergie</th><th>🧠 Pensées</th><th>💪 Corps</th><th>📝 Note moy.</th></tr></thead>
-      <tbody>${daily.length?dailyRows:'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px">Aucune entrée</td></tr>'}</tbody>
+      <thead><tr><th>Date</th><th>⚡ Énergie</th><th>🧠 Pensées</th><th>💪 Corps</th><th>📝 Note moy.</th><th></th></tr></thead>
+      <tbody>${daily.length?dailyRows:'<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px">Aucune entrée</td></tr>'}</tbody>
     </table></div>
   </div>`;
 
@@ -716,7 +720,6 @@ function renderCheckin() {
   const weeklyRows = weekly.map(e=>{
     const d = new Date(e.createdAt);
     const dStr = d.toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
-    // find matching daily entries for that week to compute avg
     const wStart = new Date(e.createdAt); wStart.setHours(0,0,0,0);
     const wEnd = new Date(wStart); wEnd.setDate(wStart.getDate()+7);
     const weekDailies = daily.filter(de=>{const t=de.createdAt;return t>=wStart.getTime()&&t<wEnd.getTime();});
@@ -731,14 +734,15 @@ function renderCheckin() {
       <td class="ci-num ${ciColor(avgC)}">${avgC??'—'}</td>
       <td class="ci-num ${ciColor(e.couple)}">${e.couple??'—'}</td>
       <td class="ci-num">${e.poids!=null?e.poids+' lbs':'—'}</td>
+      <td><button class="ci-del-btn" onclick="APP.deleteCheckin('${e.fbKey}')" title="Supprimer">✕</button></td>
     </tr>`;
   }).join('');
 
   html += `<div class="ci-subpanel${ciSubTab==='hebdo'?' active':''}">
     <div class="ci-export-row"><button class="btn-export-sm" onclick="APP.exportCheckinCSV('weekly')">⬇ Export CSV</button></div>
     <div class="checkin-table-wrap"><table class="checkin-table">
-      <thead><tr><th>Semaine</th><th>⚡ Énergie moy.</th><th>🧠 Pensées moy.</th><th>😴 Repos</th><th>💪 Corps moy.</th><th>❤️ Couple</th><th>⚖️ Poids</th></tr></thead>
-      <tbody>${weekly.length?weeklyRows:'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">Aucune entrée hebdo</td></tr>'}</tbody>
+      <thead><tr><th>Semaine</th><th>⚡ Énergie moy.</th><th>🧠 Pensées moy.</th><th>😴 Repos</th><th>💪 Corps moy.</th><th>❤️ Couple</th><th>⚖️ Poids</th><th></th></tr></thead>
+      <tbody>${weekly.length?weeklyRows:'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:24px">Aucune entrée hebdo</td></tr>'}</tbody>
     </table></div>
   </div>`;
 
@@ -802,7 +806,10 @@ function setCiTab(t) { ciSubTab = t; renderCheckin(); }
 
 async function saveCheckin(isWeekly) {
   const getVal = id => { const el=document.getElementById(id); if(!el||el.value==='') return null; return parseFloat(el.value); };
-  const entry = { createdAt: Date.now(), weekly: isWeekly };
+  const dateEl = document.getElementById(isWeekly ? 'ci-date-weekly' : 'ci-date-daily');
+  const dateVal = dateEl ? dateEl.value : null;
+  const ts = dateVal ? new Date(dateVal+'T12:00:00').getTime() : Date.now();
+  const entry = { createdAt: ts, weekly: isWeekly };
   if(!isWeekly) {
     entry.energie = getVal('ci-energie');
     entry.pensees  = getVal('ci-pensees');
@@ -816,8 +823,13 @@ async function saveCheckin(isWeekly) {
   }
   setSyncStatus('wait');
   await push(userDataPath(`${ws}/checkin`), entry);
-  // clear fields
   ['ci-energie','ci-pensees','ci-corps','ci-repos','ci-couple','ci-poids'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+async function deleteCheckin(fbKey) {
+  if(!confirm('Supprimer cette entrée ?')) return;
+  setSyncStatus('wait');
+  await remove(ref(db,`users/${currentUID}/${ws}/checkin/${fbKey}`));
 }
 
 function exportCheckinCSV(type) {
@@ -919,7 +931,7 @@ function exportHistoryCSV() {
   URL.revokeObjectURL(url);
 }
 
-window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, seedCheckinData };
+window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, seedCheckinData, deleteCheckin };
 </script>
 </body>
 </html>
