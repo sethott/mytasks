@@ -372,24 +372,28 @@ function userDataPath(subpath) {
   return ref(db, `users/${currentUID}/${subpath}`);
 }
 
+let seedDone = false;
+
 function startListening() {
   if(dbListener) dbListener();
-  dbListener = onValue(ref(db,`users/${currentUID}`), async (snapshot) => {
+  dbListener = onValue(ref(db,`users/${currentUID}`), (snapshot) => {
     const val = snapshot.val();
     if(val) {
       data.vie = val.vie||{tasks:{},history:{},journal:{},checkin:{}};
       if(!data.vie.checkin) data.vie.checkin = {};
-      // Seed historical data once if checkin is empty
-      if(Object.keys(data.vie.checkin).length === 0) {
-        await seedCheckinData();
-      }
     } else {
       data = {vie:{tasks:{},history:{},journal:{},checkin:{}}};
-      await seedCheckinData();
     }
     setSyncStatus('ok');
     renderTabs();
     renderAll();
+    // Seed once after first snapshot received, only if checkin empty
+    if(!seedDone) {
+      seedDone = true;
+      if(Object.keys(data.vie.checkin).length === 0) {
+        seedCheckinData();
+      }
+    }
   }, () => setSyncStatus('off'));
 }
 
@@ -647,6 +651,7 @@ function renderCheckin() {
   const allEntries = objToArr(wsd().checkin||{}).sort((a,b)=>b.createdAt-a.createdAt);
   const daily = allEntries.filter(e=>!e.weekly);
   const weekly = allEntries.filter(e=>e.weekly);
+  const hasData = allEntries.length > 0;
 
   const subtabs = [
     {id:'saisie',label:'📝 Saisie'},
@@ -660,6 +665,10 @@ function renderCheckin() {
 
   // ---- SAISIE ----
   html += `<div class="ci-subpanel${ciSubTab==='saisie'?' active':''}">
+    ${!hasData ? `<div style="background:#FFF8E8;border:1.5px solid #F0C040;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="font-size:13px;color:#6A4A00;"><strong>📥 Aucune donnée trouvée.</strong> Importe tes données historiques du fichier Excel.</div>
+      <button onclick="APP.seedCheckinData()" style="flex-shrink:0;padding:8px 16px;background:#0070BA;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Importer les données Excel</button>
+    </div>` : ''}
     <div class="checkin-form-grid">
       <div class="checkin-card">
         <div class="checkin-card-title">📅 Check-in quotidien</div>
@@ -910,7 +919,7 @@ function exportHistoryCSV() {
   URL.revokeObjectURL(url);
 }
 
-window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory };
+window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, seedCheckinData };
 </script>
 </body>
 </html>
