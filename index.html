@@ -233,7 +233,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .tracker-section-title{font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin:20px 0 10px}
 .tracker-section-title:first-child{margin-top:0}
 .tracker-btns{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px}
-.tracker-btn{padding:10px 18px;border-radius:10px;border:2px solid;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:8px;position:relative}
+.tracker-btn{padding:10px 18px;border-radius:10px;border:2px solid;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:8px}
 .tracker-btn.green{background:#E8FDF2;border-color:#1A9A60;color:#1A7A48}
 .tracker-btn.green:hover{background:#C8F0DC;border-color:#0F7A48}
 .tracker-btn.red{background:#FEF0EE;border-color:#D04030;color:#B02820}
@@ -241,18 +241,38 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .tracker-btn-count{background:rgba(0,0,0,0.12);border-radius:6px;padding:1px 7px;font-size:13px;font-family:'DM Mono',monospace;font-weight:700}
 .tracker-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
 .tracker-period-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-sm)}
-.tracker-period-title{font-size:13px;font-weight:600;color:var(--text3);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}
+.tracker-period-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px}
+.tracker-period-sub{font-size:11px;color:var(--text3);margin-bottom:12px;font-family:'DM Mono',monospace}
 .tracker-cat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
 .tracker-cat-row:last-child{border-bottom:none}
 .tracker-cat-label{font-size:14px;font-weight:600}
 .tracker-cat-label.green{color:#1A7A48}
 .tracker-cat-label.red{color:#B02820}
-.tracker-item-rows{margin-top:8px}
+.tracker-cat-total{font-size:28px;font-weight:800;font-family:'DM Mono',monospace}
+.tracker-cat-total.green{color:#1A7A48}
+.tracker-cat-total.red{color:#B02820}
+.tracker-item-rows{margin-top:6px}
 .tracker-item-row{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-radius:6px;font-size:13px;color:var(--text2)}
 .tracker-item-row:hover{background:var(--surface2)}
 .tracker-item-name{flex:1}
-.tracker-item-count{font-weight:700;font-family:'DM Mono',monospace;color:var(--text)}
+.tracker-item-count{font-size:19px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text)}
 .tracker-divider{height:1px;background:var(--border);margin:20px 0}
+.tracker-archive-section{}
+.tracker-archive-sub{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 8px}
+.tracker-archive-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow-sm)}
+.tracker-archive-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.tracker-archive-title{font-size:14px;font-weight:700;color:var(--text)}
+.tracker-archive-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.green-badge{background:#E8FDF2;color:#1A7A48;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:600}
+.red-badge{background:#FEF0EE;color:#B02820;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:600}
+.note-badge{background:#E8F3FB;color:#0060A0;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:600}
+.poids-badge{background:#F3EEF8;color:#6030A0;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:600}
+.tracker-archive-items{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.tracker-arc-item{font-size:11.5px;padding:2px 8px;border-radius:6px;font-weight:500}
+.tracker-arc-item.green{background:#E8FDF2;color:#1A7A48}
+.tracker-arc-item.red{background:#FEF0EE;color:#B02820}
+.tracker-archive-notes{margin-top:8px;font-size:12px;color:var(--text2)}
+.arc-note{padding:2px 0;font-family:'DM Mono',monospace;font-size:11px}
 
 @media(max-width:600px){
   body{padding:0;align-items:flex-start}
@@ -422,9 +442,11 @@ function startListening() {
   dbListener = onValue(ref(db,`users/${currentUID}`), (snapshot) => {
     const val = snapshot.val();
     if(val) {
-      data.vie = val.vie||{tasks:{},history:{},journal:{},checkin:{},tracker:{}};
+      data.vie = val.vie||{tasks:{},history:{},journal:{},checkin:{},tracker:{},tracker_archives:{},tracker_q_archives:{}};
       if(!data.vie.checkin) data.vie.checkin = {};
       if(!data.vie.tracker) data.vie.tracker = {};
+      if(!data.vie.tracker_archives) data.vie.tracker_archives = {};
+      if(!data.vie.tracker_q_archives) data.vie.tracker_q_archives = {};
       data._flags = val._flags||{};
     } else {
       data = {vie:{tasks:{},history:{},journal:{},checkin:{}}};
@@ -882,6 +904,10 @@ async function saveCheckin(isWeekly) {
 
   setSyncStatus('wait');
   await push(userDataPath(`${ws}/checkin`), entry);
+  // If weekly, archive current tracker week
+  if(isWeekly) {
+    await archiveWeekTracker();
+  }
   ['ci-energie','ci-pensees','ci-corps','ci-repos','ci-couple','ci-poids'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
 }
 
@@ -952,31 +978,68 @@ const TRACKER_ITEMS = [
   {key:'gym',       label:'💪 Gym',         cat:'green'},
   {key:'vaisselle', label:'🍽 Vaisselle',   cat:'green'},
   {key:'menage',    label:'🧹 Ménage',      cat:'green'},
-  {key:'restaurant',label:'🍽 Restaurant',  cat:'red'},
+  {key:'cuisiner',  label:'👨‍🍳 Cuisiner',   cat:'green'},
+  {key:'restaurant',label:'🍔 Restaurant',  cat:'red'},
   {key:'binge',     label:'📺 Binge',       cat:'red'},
   {key:'depanneur', label:'🏪 Dépanneur',   cat:'red'},
   {key:'alcool',    label:'🍺 Alcool',       cat:'red'},
 ];
 
+// Epoch anchors — fixed start dates
+const WEEK1_START  = new Date('2026-04-27T00:00:00').getTime();
+const Q1_START     = new Date('2026-04-27T00:00:00').getTime();
+const Q1_DAYS      = 91;
+const WEEK_MS      = 7 * 86400000;
+const Q1_MS        = Q1_DAYS * 86400000;
+
+function getCurrentWeekStart() {
+  // Find most recent weekly checkin to determine current week start
+  const weeklies = objToArr(wsd().checkin||{})
+    .filter(e=>e.weekly)
+    .sort((a,b)=>b.createdAt-a.createdAt);
+  if(!weeklies.length) return WEEK1_START;
+  // The latest weekly checkin marks the start of the NEXT week
+  const lastWeeklyTs = weeklies[0].createdAt;
+  // If latest weekly is after WEEK1_START, current week starts at last weekly
+  return lastWeeklyTs > WEEK1_START ? lastWeeklyTs : WEEK1_START;
+}
+
+function getCurrentQ1Start() {
+  // Find if there are Q archives, if so use the last one's end as new start
+  const qArchives = objToArr(wsd().tracker_q_archives||{}).sort((a,b)=>a.startTs-b.startTs);
+  if(!qArchives.length) return Q1_START;
+  const last = qArchives[qArchives.length-1];
+  return last.endTs || Q1_START;
+}
+
 function renderTracker() {
   const el = document.getElementById('panel-tracker');
   const entries = objToArr(wsd().tracker||{});
-  const now = Date.now();
-  const D7  = now - 7  * 86400000;
-  const D30 = now - 30 * 86400000;
+  const archives = objToArr(wsd().tracker_archives||{}).sort((a,b)=>b.weekStart-a.weekStart);
+  const qArchives = objToArr(wsd().tracker_q_archives||{}).sort((a,b)=>b.startTs-a.startTs);
 
-  // Count per key per period
-  function counts(from) {
+  const now = Date.now();
+  const weekStart = getCurrentWeekStart();
+  const q1Start   = getCurrentQ1Start();
+  const q1End     = q1Start + Q1_MS;
+  const q1Label   = 'Quartier 1';
+
+  // Auto-reset Q1 if expired (write archive)
+  if(now >= q1End && !data._flags?.q1Archived) {
+    archiveQ1(q1Start, q1End, entries);
+  }
+
+  function counts(fromTs, toTs) {
     const c = {};
     TRACKER_ITEMS.forEach(i=>c[i.key]=0);
-    entries.filter(e=>e.ts>=from).forEach(e=>{ if(c[e.key]!=null) c[e.key]++; });
+    entries.filter(e=>e.ts>=fromTs && (toTs==null||e.ts<toTs)).forEach(e=>{ if(c[e.key]!=null) c[e.key]++; });
     return c;
   }
-  const allC  = counts(0);
-  const c7    = counts(D7);
-  const c30   = counts(D30);
 
-  // Category totals
+  const allC    = counts(0);
+  const weekC   = counts(weekStart);
+  const q1C     = counts(q1Start, Math.min(now, q1End));
+
   function catTotal(c, cat) {
     return TRACKER_ITEMS.filter(i=>i.cat===cat).reduce((s,i)=>s+c[i.key],0);
   }
@@ -992,14 +1055,15 @@ function renderTracker() {
       </button>`).join('');
   }
 
-  function periodCard(title, c) {
+  function periodCard(title, c, subtitle) {
     const gTotal = catTotal(c,'green');
     const rTotal = catTotal(c,'red');
     return `<div class="tracker-period-card">
       <div class="tracker-period-title">${title}</div>
+      ${subtitle?`<div class="tracker-period-sub">${subtitle}</div>`:''}
       <div class="tracker-cat-row">
         <span class="tracker-cat-label green">✅ Positif</span>
-        <span class="tracker-item-count" style="color:#1A7A48">${gTotal}</span>
+        <span class="tracker-cat-total green">${gTotal}</span>
       </div>
       <div class="tracker-item-rows">${green.map(i=>`
         <div class="tracker-item-row">
@@ -1007,9 +1071,9 @@ function renderTracker() {
           <span class="tracker-item-count">${c[i.key]}</span>
         </div>`).join('')}
       </div>
-      <div class="tracker-cat-row" style="margin-top:8px">
+      <div class="tracker-cat-row" style="margin-top:10px">
         <span class="tracker-cat-label red">⚠️ À surveiller</span>
-        <span class="tracker-item-count" style="color:#B02820">${rTotal}</span>
+        <span class="tracker-cat-total red">${rTotal}</span>
       </div>
       <div class="tracker-item-rows">${red.map(i=>`
         <div class="tracker-item-row">
@@ -1020,6 +1084,70 @@ function renderTracker() {
     </div>`;
   }
 
+  // Week number
+  const weekNum = Math.floor((weekStart - WEEK1_START) / WEEK_MS) + 1;
+  const weekDateStr = new Date(weekStart).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+  const q1DaysLeft = Math.max(0, Math.ceil((q1End - now) / 86400000));
+  const q1DateStr = new Date(q1Start).toLocaleDateString('fr-CA',{month:'short',day:'numeric'}) + ' → ' + new Date(q1End).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+
+  // Archives section
+  let archiveHtml = '';
+  if(archives.length || qArchives.length) {
+    archiveHtml = `<div class="tracker-divider"></div>
+    <div class="tracker-archive-section">
+      <div class="tracker-section-title">📦 Archives</div>`;
+
+    if(archives.length) {
+      archiveHtml += `<div class="tracker-archive-sub">Semaines</div>`;
+      archiveHtml += archives.map(a=>{
+        const wDate = new Date(a.weekStart).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+        const gT = TRACKER_ITEMS.filter(i=>i.cat==='green').reduce((s,i)=>s+(a.counts[i.key]||0),0);
+        const rT = TRACKER_ITEMS.filter(i=>i.cat==='red').reduce((s,i)=>s+(a.counts[i.key]||0),0);
+        const poidsStr = a.poidsDelta!=null ? (a.poidsDelta>0?'+':'')+a.poidsDelta+'lbs' : '—';
+        return `<div class="tracker-archive-card">
+          <div class="tracker-archive-header">
+            <span class="tracker-archive-title">Sem. ${a.weekNum} — ${wDate}</span>
+            <button class="btn-export-sm" onclick="APP.exportTrackerArchiveCSV('${a.fbKey}')">⬇ CSV</button>
+          </div>
+          <div class="tracker-archive-meta">
+            <span class="green-badge">✅ ${gT} positif</span>
+            <span class="red-badge">⚠️ ${rT} surveiller</span>
+            ${a.avgNote!=null?`<span class="note-badge">📝 Note moy: ${a.avgNote}</span>`:''}
+            ${a.poidsDelta!=null?`<span class="poids-badge">⚖️ Poids: ${poidsStr}</span>`:''}
+          </div>
+          <div class="tracker-archive-items">${TRACKER_ITEMS.map(i=>`
+            <span class="tracker-arc-item ${i.cat}">${i.label} <strong>${a.counts[i.key]||0}</strong></span>`).join('')}
+          </div>
+          ${a.weekNotes&&a.weekNotes.length?`<div class="tracker-archive-notes"><strong>Notes:</strong> ${a.weekNotes.map(n=>`<div class="arc-note">${n}</div>`).join('')}</div>`:''}
+        </div>`;
+      }).join('');
+    }
+
+    if(qArchives.length) {
+      archiveHtml += `<div class="tracker-archive-sub" style="margin-top:14px">Quartiers</div>`;
+      archiveHtml += qArchives.map(a=>{
+        const dStr = new Date(a.startTs).toLocaleDateString('fr-CA',{month:'short',day:'numeric'}) + ' → ' + new Date(a.endTs).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+        const gT = TRACKER_ITEMS.filter(i=>i.cat==='green').reduce((s,i)=>s+(a.counts[i.key]||0),0);
+        const rT = TRACKER_ITEMS.filter(i=>i.cat==='red').reduce((s,i)=>s+(a.counts[i.key]||0),0);
+        return `<div class="tracker-archive-card">
+          <div class="tracker-archive-header">
+            <span class="tracker-archive-title">Q${a.quarterNum} — ${dStr}</span>
+            <button class="btn-export-sm" onclick="APP.exportTrackerQArchiveCSV('${a.fbKey}')">⬇ CSV</button>
+          </div>
+          <div class="tracker-archive-meta">
+            <span class="green-badge">✅ ${gT} positif</span>
+            <span class="red-badge">⚠️ ${rT} surveiller</span>
+          </div>
+          <div class="tracker-archive-items">${TRACKER_ITEMS.map(i=>`
+            <span class="tracker-arc-item ${i.cat}">${i.label} <strong>${a.counts[i.key]||0}</strong></span>`).join('')}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    archiveHtml += '</div>';
+  }
+
   el.innerHTML = `
     <div class="tracker-section-title">✅ Positif</div>
     <div class="tracker-btns">${btnGroup(green)}</div>
@@ -1027,15 +1155,108 @@ function renderTracker() {
     <div class="tracker-btns">${btnGroup(red)}</div>
     <div class="tracker-divider"></div>
     <div class="tracker-stats-grid">
-      ${periodCard('📅 7 derniers jours', c7)}
-      ${periodCard('📆 30 derniers jours', c30)}
+      ${periodCard(`📅 Semaine ${weekNum}`, weekC, `depuis le ${weekDateStr}`)}
+      ${periodCard(`📆 ${q1Label}`, q1C, `${q1DateStr} · ${q1DaysLeft}j restants`)}
       ${periodCard('🗓 Tout le temps', allC)}
-    </div>`;
+    </div>
+    ${archiveHtml}`;
 }
 
 async function logTracker(key) {
   setSyncStatus('wait');
   await push(userDataPath(`${ws}/tracker`), {key, ts: Date.now()});
+}
+
+async function archiveWeekTracker() {
+  const entries = objToArr(wsd().tracker||{});
+  const checkinEntries = objToArr(wsd().checkin||{});
+  const weekStart = getCurrentWeekStart();
+  const now = Date.now();
+
+  // Counts for this week
+  const c = {};
+  TRACKER_ITEMS.forEach(i=>c[i.key]=0);
+  entries.filter(e=>e.ts>=weekStart && e.ts<now).forEach(e=>{ if(c[e.key]!=null) c[e.key]++; });
+
+  // Weekly checkin notes (daily entries from this week)
+  const weekDailies = checkinEntries
+    .filter(e=>!e.weekly && e.createdAt>=weekStart && e.createdAt<now)
+    .sort((a,b)=>a.createdAt-b.createdAt);
+  const weekNotes = weekDailies.slice(-5).map(e=>{
+    const d = new Date(e.createdAt).toLocaleDateString('fr-CA',{weekday:'short',month:'short',day:'numeric'});
+    const note = e.energie!=null&&e.pensees!=null&&e.corps!=null
+      ? Math.round(((+e.energie + +e.pensees + +e.corps)/3)*100)/100 : null;
+    return `${d}: ${note!=null?note+'avg':''} E:${e.energie??'?'} P:${e.pensees??'?'} C:${e.corps??'?'}`;
+  });
+
+  // Avg note
+  const avgNote = weekDailies.length
+    ? Math.round(weekDailies.filter(e=>e.energie!=null&&e.pensees!=null&&e.corps!=null)
+        .reduce((s,e)=>s+((+e.energie + +e.pensees + +e.corps)/3),0)/weekDailies.length*100)/100
+    : null;
+
+  // Poids delta vs previous week archive
+  const prevArchives = objToArr(wsd().tracker_archives||{}).sort((a,b)=>b.weekStart-a.weekStart);
+  const thisWeekWeekly = checkinEntries.filter(e=>e.weekly && e.createdAt>=weekStart && e.createdAt<now).sort((a,b)=>b.createdAt-a.createdAt);
+  const prevWeekWeekly = checkinEntries.filter(e=>e.weekly && e.createdAt<weekStart).sort((a,b)=>b.createdAt-a.createdAt);
+  const curPoids  = thisWeekWeekly.length && thisWeekWeekly[0].poids!=null ? +thisWeekWeekly[0].poids : null;
+  const prevPoids = prevWeekWeekly.length && prevWeekWeekly[0].poids!=null ? +prevWeekWeekly[0].poids : null;
+  const poidsDelta = curPoids!=null && prevPoids!=null ? Math.round((curPoids-prevPoids)*10)/10 : null;
+
+  const weekNum = Math.floor((weekStart - WEEK1_START) / WEEK_MS) + 1;
+
+  setSyncStatus('wait');
+  await push(userDataPath(`${ws}/tracker_archives`), {
+    weekNum, weekStart, weekEnd: now, counts: c,
+    weekNotes, avgNote, poidsDelta
+  });
+}
+
+async function archiveQ1(startTs, endTs, entries) {
+  // Mark flag immediately to prevent double-archive
+  await fbSet(ref(db,`users/${currentUID}/_flags/q1Archived`), true);
+
+  const c = {};
+  TRACKER_ITEMS.forEach(i=>c[i.key]=0);
+  entries.filter(e=>e.ts>=startTs && e.ts<endTs).forEach(e=>{ if(c[e.key]!=null) c[e.key]++; });
+
+  const qArchives = objToArr(wsd().tracker_q_archives||{});
+  const quarterNum = qArchives.length + 1;
+
+  await push(userDataPath(`${ws}/tracker_q_archives`), {
+    quarterNum, startTs, endTs, counts: c
+  });
+
+  // Reset q1 flag so next quarter can be archived
+  await fbSet(ref(db,`users/${currentUID}/_flags/q1Archived`), false);
+}
+
+function exportTrackerArchiveCSV(fbKey) {
+  const archives = objToArr(wsd().tracker_archives||{});
+  const a = archives.find(x=>x.fbKey===fbKey);
+  if(!a) return;
+  const rows = [['Item','Catégorie','Nombre']];
+  TRACKER_ITEMS.forEach(i=>rows.push([i.label, i.cat==='green'?'Positif':'À surveiller', a.counts[i.key]||0]));
+  if(a.avgNote) rows.push(['Note moyenne semaine','',a.avgNote]);
+  if(a.poidsDelta!=null) rows.push(['Variation poids (lbs)','',a.poidsDelta]);
+  downloadCSV(rows, `tracker-sem${a.weekNum}.csv`);
+}
+
+function exportTrackerQArchiveCSV(fbKey) {
+  const qArchives = objToArr(wsd().tracker_q_archives||{});
+  const a = qArchives.find(x=>x.fbKey===fbKey);
+  if(!a) return;
+  const rows = [['Item','Catégorie','Nombre']];
+  TRACKER_ITEMS.forEach(i=>rows.push([i.label, i.cat==='green'?'Positif':'À surveiller', a.counts[i.key]||0]));
+  downloadCSV(rows, `tracker-Q${a.quarterNum}.csv`);
+}
+
+function downloadCSV(rows, filename) {
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
 }
 
 
@@ -1082,7 +1303,7 @@ function exportHistoryCSV() {
   URL.revokeObjectURL(url);
 }
 
-window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, seedCheckinData, deleteCheckin, logTracker };
+window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, seedCheckinData, deleteCheckin, logTracker, exportTrackerArchiveCSV, exportTrackerQArchiveCSV };
 </script>
 </body>
 </html>
