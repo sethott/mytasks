@@ -1017,9 +1017,11 @@ const DEFAULT_TRACKER_BUTTONS = [
 ];
 
 function getTrackerItems() {
-  const stored = objToArr(wsd().tracker_buttons||{});
-  if(stored.length) return stored.map(b=>({key:b.key,label:b.label,cat:b.cat,fbKey:b.fbKey}));
-  return DEFAULT_TRACKER_BUTTONS;
+  // Always start with defaults, then ADD custom Firebase buttons on top
+  const custom = objToArr(wsd().tracker_buttons||{}).map(b=>({key:b.key,label:b.label,cat:b.cat,fbKey:b.fbKey,isCustom:true}));
+  const defaultKeys = new Set(DEFAULT_TRACKER_BUTTONS.map(d=>d.key));
+  const customNew = custom.filter(c=>!defaultKeys.has(c.key)); // only truly new ones
+  return [...DEFAULT_TRACKER_BUTTONS, ...customNew];
 }
 
 // Epoch anchors — fixed start dates
@@ -1068,8 +1070,11 @@ function renderTracker() {
 
   function counts(fromTs, toTs) {
     const c = {};
-    getTrackerItems().forEach(i=>c[i.key]=0);
-    entries.filter(e=>e.ts>=fromTs && (toTs==null||e.ts<toTs)).forEach(e=>{ if(c[e.key]!=null) c[e.key]++; });
+    ITEMS.forEach(i=>c[i.key]=0);
+    entries.filter(e=>e.ts>=fromTs && (toTs==null||e.ts<toTs)).forEach(e=>{
+      // Count even if key not in current button list (preserves historical data)
+      c[e.key] = (c[e.key]||0) + 1;
+    });
     return c;
   }
 
@@ -1195,21 +1200,20 @@ function renderTracker() {
     <div class="tracker-manage-box">
       <div class="tracker-manage-title">⚙️ Gérer les boutons</div>
       <div class="tracker-manage-row">
-        <input type="text" id="tb-label" placeholder="Nom du bouton (ex: Yoga)" class="tracker-manage-input">
+        <input type="text" id="tb-label" placeholder="Emoji + nom  ex: 🧘 Yoga" class="tracker-manage-input">
         <select id="tb-cat" class="tracker-manage-sel">
           <option value="green">✅ Vert (positif)</option>
           <option value="red">⚠️ Rouge (à surveiller)</option>
         </select>
-        <button class="btn-checkin-save" style="width:auto;padding:8px 18px" onclick="APP.addTrackerBtn()">+ Ajouter</button>
+        <button class="btn-tracker-add" onclick="APP.addTrackerBtn()">+ Ajouter</button>
       </div>
-      ${allItems.filter(i=>i.custom).length ? `
       <div class="tracker-manage-row" style="margin-top:8px">
         <select id="tb-remove-sel" class="tracker-manage-sel" style="flex:1">
-          <option value="">— Choisir un bouton à retirer —</option>
-          ${allItems.filter(i=>i.custom).map(i=>`<option value="${i.fbKey||i.key}">${i.label}</option>`).join('')}
+          <option value="">— Supprimer un bouton ajouté —</option>
+          ${ITEMS.filter(i=>i.fbKey).map(i=>`<option value="${i.fbKey}">${i.label}</option>`).join('')}
         </select>
-        <button class="btn-checkin-save" style="width:auto;padding:8px 18px;background:#C02020" onclick="APP.removeTrackerBtn()">Retirer</button>
-      </div>` : ''}
+        <button class="btn-tracker-del" onclick="APP.removeTrackerBtn()">Supprimer</button>
+      </div>
     </div>
 
     <div class="tracker-divider"></div>
@@ -1325,7 +1329,8 @@ async function addTrackerBtn() {
   const catEl = document.getElementById('tb-cat');
   const label = (labelEl?.value||'').trim();
   if(!label){ alert('Entre un nom pour le bouton.'); return; }
-  const key = label.toLowerCase().replace(/[^a-z0-9]/g,'_').replace(/_+/g,'_').slice(0,20)+'_'+Date.now().toString(36);
+  // Stable key: sanitized label + timestamp suffix to avoid collisions
+  const key = 'custom_' + label.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15) + '_' + Date.now().toString(36);
   const cat = catEl?.value||'green';
   setSyncStatus('wait');
   await push(userDataPath(`${ws}/tracker_buttons`), {key, label, cat});
@@ -1335,7 +1340,7 @@ async function addTrackerBtn() {
 async function removeTrackerBtn() {
   const sel = document.getElementById('tb-remove-sel');
   const fbKey = sel?.value;
-  if(!fbKey){ alert('Choisis un bouton à retirer.'); return; }
+  if(!fbKey){ alert('Choisis un bouton ajouté à supprimer.'); return; }
   setSyncStatus('wait');
   await remove(ref(db,`users/${currentUID}/${ws}/tracker_buttons/${fbKey}`));
 }
