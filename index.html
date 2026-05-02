@@ -229,7 +229,36 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .hist-del-btn:hover{color:var(--red);background:rgba(224,48,48,0.08);border-color:rgba(224,48,48,0.2)}
 
 /* MOBILE */
-/* TRACKER */
+/* DATA PANEL */
+.data-report-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.data-report-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.data-report-title{font-size:18px;font-weight:700;color:var(--blue-dark)}
+.data-report-date{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace}
+.data-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.data-stat{background:var(--blue-light);border-radius:10px;padding:12px 14px;text-align:center}
+.data-stat-val{font-size:28px;font-weight:800;color:var(--blue-dark);font-family:'DM Mono',monospace}
+.data-stat-lbl{font-size:11px;color:var(--text3);margin-top:3px;font-weight:500}
+.data-section-lbl{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 6px}
+.data-tracker-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.data-tracker-pill{font-size:12px;padding:3px 10px;border-radius:6px;font-weight:600}
+.data-tracker-pill.green{background:#E8FDF2;color:#1A7A48}
+.data-tracker-pill.red{background:#FEF0EE;color:#B02820}
+.data-poids-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.data-poids-badge{font-size:13px;padding:4px 12px;border-radius:8px;font-weight:600;background:var(--surface2);color:var(--text2)}
+.data-poids-badge.pos{background:#FEF0EE;color:#B02820}
+.data-poids-badge.neg{background:#E8FDF2;color:#1A7A48}
+.data-empty{text-align:center;padding:48px 20px;color:var(--text3);font-size:15px}
+/* TRACKER MANAGE */
+.tracker-manage-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:20px}
+.tracker-manage-title{font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+.tracker-manage-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tracker-manage-input{flex:1;min-width:120px;padding:8px 11px;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--text);font-family:'Inter',sans-serif;font-size:14px}
+.tracker-manage-input:focus{outline:none;border-color:var(--blue)}
+.tracker-manage-sel{padding:8px 11px;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;cursor:pointer}
+.btn-tracker-add{padding:8px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-tracker-add:hover{background:var(--blue-dark)}
+.btn-tracker-del{padding:8px 16px;background:#FEF0EE;color:#B02820;border:1.5px solid #D04030;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-tracker-del:hover{background:#FCDAD6}
 .tracker-section-title{font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin:20px 0 10px}
 .tracker-section-title:first-child{margin-top:0}
 .tracker-btns{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px}
@@ -356,8 +385,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="panel" id="panel-cats"></div>
       <div class="panel" id="panel-journal"></div>
       <div class="panel" id="panel-tracker"></div>
+      <div class="panel" id="panel-data"></div>
       <div class="panel" id="panel-history"></div>
       <div class="panel" id="panel-checkin"></div>
+      <div class="panel" id="panel-data"></div>
     </div>
   </div>
 </div>
@@ -401,7 +432,7 @@ const WS = {
 };
 
 let ws = 'vie', activeTab = 'tasks', currentUID = null, dbListener = null;
-let data = {vie:{tasks:{},history:{},journal:{},checkin:{},tracker:{}}, _flags:{}};
+let data = {vie:{tasks:{},history:{},journal:{},checkin:{},tracker:{},tracker_archives:{},tracker_q_archives:{},tracker_buttons:{},weekly_reports:{}}, _flags:{}};
 let selectedJournalKey = null;
 
 function setSyncStatus(state) {
@@ -442,19 +473,23 @@ function startListening() {
   dbListener = onValue(ref(db,`users/${currentUID}`), (snapshot) => {
     const val = snapshot.val();
     if(val) {
-      data.vie = val.vie||{tasks:{},history:{},journal:{},checkin:{},tracker:{},tracker_archives:{},tracker_q_archives:{}};
+      data.vie = val.vie||{};
       if(!data.vie.checkin) data.vie.checkin = {};
       if(!data.vie.tracker) data.vie.tracker = {};
       if(!data.vie.tracker_archives) data.vie.tracker_archives = {};
       if(!data.vie.tracker_q_archives) data.vie.tracker_q_archives = {};
+      if(!data.vie.tracker_buttons) data.vie.tracker_buttons = {};
+      if(!data.vie.weekly_reports) data.vie.weekly_reports = {};
       data._flags = val._flags||{};
     } else {
-      data = {vie:{tasks:{},history:{},journal:{},checkin:{}}};
+      data = {vie:{tasks:{},history:{},journal:{},checkin:{},tracker:{},tracker_archives:{},tracker_q_archives:{},tracker_buttons:{},weekly_reports:{}}};
       data._flags = {};
     }
     setSyncStatus('ok');
     renderTabs();
     renderAll();
+    // Check if we need to auto-generate weekly report (Monday 4am logic)
+    checkAutoWeeklyReport();
   }, () => setSyncStatus('off'));
 }
 
@@ -514,6 +549,7 @@ function renderTabs() {
     {id:'checkin',label:'Check-in',badge:checkin.length||null},
     {id:'journal',label:jLabel,badge:journal.length},
     {id:'tracker',label:'Tracker'},
+    {id:'data',label:'📊 Data'},
     {id:'history',label:'Historique',badge:history.length}
   ];
   document.getElementById('tabs-row').innerHTML = tabs.map(t=>{
@@ -904,10 +940,6 @@ async function saveCheckin(isWeekly) {
 
   setSyncStatus('wait');
   await push(userDataPath(`${ws}/checkin`), entry);
-  // If weekly, archive current tracker week
-  if(isWeekly) {
-    await archiveWeekTracker();
-  }
   ['ci-energie','ci-pensees','ci-corps','ci-repos','ci-couple','ci-poids'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
 }
 
@@ -971,8 +1003,7 @@ async function deleteHistory(fbKey) {
   await remove(ref(db,`users/${currentUID}/${ws}/history/${fbKey}`));
 }
 
-
-const TRACKER_ITEMS = [
+const DEFAULT_TRACKER_BUTTONS = [
   {key:'badminton', label:'🏸 Badminton', cat:'green'},
   {key:'marche',    label:'🚶 Marche',     cat:'green'},
   {key:'gym',       label:'💪 Gym',         cat:'green'},
@@ -984,6 +1015,12 @@ const TRACKER_ITEMS = [
   {key:'depanneur', label:'🏪 Dépanneur',   cat:'red'},
   {key:'alcool',    label:'🍺 Alcool',       cat:'red'},
 ];
+
+function getTrackerItems() {
+  const stored = objToArr(wsd().tracker_buttons||{});
+  if(stored.length) return stored.map(b=>({key:b.key,label:b.label,cat:b.cat,fbKey:b.fbKey}));
+  return DEFAULT_TRACKER_BUTTONS;
+}
 
 // Epoch anchors — fixed start dates
 const WEEK1_START  = new Date('2026-04-27T00:00:00').getTime();
@@ -1031,7 +1068,7 @@ function renderTracker() {
 
   function counts(fromTs, toTs) {
     const c = {};
-    TRACKER_ITEMS.forEach(i=>c[i.key]=0);
+    getTrackerItems().forEach(i=>c[i.key]=0);
     entries.filter(e=>e.ts>=fromTs && (toTs==null||e.ts<toTs)).forEach(e=>{ if(c[e.key]!=null) c[e.key]++; });
     return c;
   }
@@ -1041,11 +1078,12 @@ function renderTracker() {
   const q1C     = counts(q1Start, Math.min(now, q1End));
 
   function catTotal(c, cat) {
-    return TRACKER_ITEMS.filter(i=>i.cat===cat).reduce((s,i)=>s+c[i.key],0);
+    return getTrackerItems().filter(i=>i.cat===cat).reduce((s,i)=>s+c[i.key],0);
   }
 
-  const green = TRACKER_ITEMS.filter(i=>i.cat==='green');
-  const red   = TRACKER_ITEMS.filter(i=>i.cat==='red');
+  const green = getTrackerItems().filter(i=>i.cat==='green');
+  const red   = getTrackerItems().filter(i=>i.cat==='red');
+  const allItems = getTrackerItems();
 
   function btnGroup(items) {
     return items.map(i=>`
@@ -1101,8 +1139,8 @@ function renderTracker() {
       archiveHtml += `<div class="tracker-archive-sub">Semaines</div>`;
       archiveHtml += archives.map(a=>{
         const wDate = new Date(a.weekStart).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
-        const gT = TRACKER_ITEMS.filter(i=>i.cat==='green').reduce((s,i)=>s+(a.counts[i.key]||0),0);
-        const rT = TRACKER_ITEMS.filter(i=>i.cat==='red').reduce((s,i)=>s+(a.counts[i.key]||0),0);
+        const gT = getTrackerItems().filter(i=>i.cat==='green').reduce((s,i)=>s+(a.counts[i.key]||0),0);
+        const rT = getTrackerItems().filter(i=>i.cat==='red').reduce((s,i)=>s+(a.counts[i.key]||0),0);
         const poidsStr = a.poidsDelta!=null ? (a.poidsDelta>0?'+':'')+a.poidsDelta+'lbs' : '—';
         return `<div class="tracker-archive-card">
           <div class="tracker-archive-header">
@@ -1115,7 +1153,7 @@ function renderTracker() {
             ${a.avgNote!=null?`<span class="note-badge">📝 Note moy: ${a.avgNote}</span>`:''}
             ${a.poidsDelta!=null?`<span class="poids-badge">⚖️ Poids: ${poidsStr}</span>`:''}
           </div>
-          <div class="tracker-archive-items">${TRACKER_ITEMS.map(i=>`
+          <div class="tracker-archive-items">${getTrackerItems().map(i=>`
             <span class="tracker-arc-item ${i.cat}">${i.label} <strong>${a.counts[i.key]||0}</strong></span>`).join('')}
           </div>
           ${a.weekNotes&&a.weekNotes.length?`<div class="tracker-archive-notes"><strong>Notes:</strong> ${a.weekNotes.map(n=>`<div class="arc-note">${n}</div>`).join('')}</div>`:''}
@@ -1127,8 +1165,8 @@ function renderTracker() {
       archiveHtml += `<div class="tracker-archive-sub" style="margin-top:14px">Quartiers</div>`;
       archiveHtml += qArchives.map(a=>{
         const dStr = new Date(a.startTs).toLocaleDateString('fr-CA',{month:'short',day:'numeric'}) + ' → ' + new Date(a.endTs).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
-        const gT = TRACKER_ITEMS.filter(i=>i.cat==='green').reduce((s,i)=>s+(a.counts[i.key]||0),0);
-        const rT = TRACKER_ITEMS.filter(i=>i.cat==='red').reduce((s,i)=>s+(a.counts[i.key]||0),0);
+        const gT = getTrackerItems().filter(i=>i.cat==='green').reduce((s,i)=>s+(a.counts[i.key]||0),0);
+        const rT = getTrackerItems().filter(i=>i.cat==='red').reduce((s,i)=>s+(a.counts[i.key]||0),0);
         return `<div class="tracker-archive-card">
           <div class="tracker-archive-header">
             <span class="tracker-archive-title">Q${a.quarterNum} — ${dStr}</span>
@@ -1138,7 +1176,7 @@ function renderTracker() {
             <span class="green-badge">✅ ${gT} positif</span>
             <span class="red-badge">⚠️ ${rT} surveiller</span>
           </div>
-          <div class="tracker-archive-items">${TRACKER_ITEMS.map(i=>`
+          <div class="tracker-archive-items">${getTrackerItems().map(i=>`
             <span class="tracker-arc-item ${i.cat}">${i.label} <strong>${a.counts[i.key]||0}</strong></span>`).join('')}
           </div>
         </div>`;
@@ -1153,6 +1191,27 @@ function renderTracker() {
     <div class="tracker-btns">${btnGroup(green)}</div>
     <div class="tracker-section-title" style="margin-top:16px">⚠️ À surveiller</div>
     <div class="tracker-btns">${btnGroup(red)}</div>
+
+    <div class="tracker-manage-box">
+      <div class="tracker-manage-title">⚙️ Gérer les boutons</div>
+      <div class="tracker-manage-row">
+        <input type="text" id="tb-label" placeholder="Nom du bouton (ex: Yoga)" class="tracker-manage-input">
+        <select id="tb-cat" class="tracker-manage-sel">
+          <option value="green">✅ Vert (positif)</option>
+          <option value="red">⚠️ Rouge (à surveiller)</option>
+        </select>
+        <button class="btn-checkin-save" style="width:auto;padding:8px 18px" onclick="APP.addTrackerBtn()">+ Ajouter</button>
+      </div>
+      ${allItems.filter(i=>i.custom).length ? `
+      <div class="tracker-manage-row" style="margin-top:8px">
+        <select id="tb-remove-sel" class="tracker-manage-sel" style="flex:1">
+          <option value="">— Choisir un bouton à retirer —</option>
+          ${allItems.filter(i=>i.custom).map(i=>`<option value="${i.fbKey||i.key}">${i.label}</option>`).join('')}
+        </select>
+        <button class="btn-checkin-save" style="width:auto;padding:8px 18px;background:#C02020" onclick="APP.removeTrackerBtn()">Retirer</button>
+      </div>` : ''}
+    </div>
+
     <div class="tracker-divider"></div>
     <div class="tracker-stats-grid">
       ${periodCard(`📅 Semaine ${weekNum}`, weekC, `depuis le ${weekDateStr}`)}
@@ -1175,7 +1234,7 @@ async function archiveWeekTracker() {
 
   // Counts for this week
   const c = {};
-  TRACKER_ITEMS.forEach(i=>c[i.key]=0);
+  getTrackerItems().forEach(i=>c[i.key]=0);
   entries.filter(e=>e.ts>=weekStart && e.ts<now).forEach(e=>{ if(c[e.key]!=null) c[e.key]++; });
 
   // Weekly checkin notes (daily entries from this week)
@@ -1217,7 +1276,7 @@ async function archiveQ1(startTs, endTs, entries) {
   await fbSet(ref(db,`users/${currentUID}/_flags/q1Archived`), true);
 
   const c = {};
-  TRACKER_ITEMS.forEach(i=>c[i.key]=0);
+  getTrackerItems().forEach(i=>c[i.key]=0);
   entries.filter(e=>e.ts>=startTs && e.ts<endTs).forEach(e=>{ if(c[e.key]!=null) c[e.key]++; });
 
   const qArchives = objToArr(wsd().tracker_q_archives||{});
@@ -1236,7 +1295,7 @@ function exportTrackerArchiveCSV(fbKey) {
   const a = archives.find(x=>x.fbKey===fbKey);
   if(!a) return;
   const rows = [['Item','Catégorie','Nombre']];
-  TRACKER_ITEMS.forEach(i=>rows.push([i.label, i.cat==='green'?'Positif':'À surveiller', a.counts[i.key]||0]));
+  getTrackerItems().forEach(i=>rows.push([i.label, i.cat==='green'?'Positif':'À surveiller', a.counts[i.key]||0]));
   if(a.avgNote) rows.push(['Note moyenne semaine','',a.avgNote]);
   if(a.poidsDelta!=null) rows.push(['Variation poids (lbs)','',a.poidsDelta]);
   downloadCSV(rows, `tracker-sem${a.weekNum}.csv`);
@@ -1247,7 +1306,7 @@ function exportTrackerQArchiveCSV(fbKey) {
   const a = qArchives.find(x=>x.fbKey===fbKey);
   if(!a) return;
   const rows = [['Item','Catégorie','Nombre']];
-  TRACKER_ITEMS.forEach(i=>rows.push([i.label, i.cat==='green'?'Positif':'À surveiller', a.counts[i.key]||0]));
+  getTrackerItems().forEach(i=>rows.push([i.label, i.cat==='green'?'Positif':'À surveiller', a.counts[i.key]||0]));
   downloadCSV(rows, `tracker-Q${a.quarterNum}.csv`);
 }
 
@@ -1260,6 +1319,179 @@ function downloadCSV(rows, filename) {
 }
 
 
+
+async function addTrackerBtn() {
+  const labelEl = document.getElementById('tb-label');
+  const catEl = document.getElementById('tb-cat');
+  const label = (labelEl?.value||'').trim();
+  if(!label){ alert('Entre un nom pour le bouton.'); return; }
+  const key = label.toLowerCase().replace(/[^a-z0-9]/g,'_').replace(/_+/g,'_').slice(0,20)+'_'+Date.now().toString(36);
+  const cat = catEl?.value||'green';
+  setSyncStatus('wait');
+  await push(userDataPath(`${ws}/tracker_buttons`), {key, label, cat});
+  if(labelEl) labelEl.value='';
+}
+
+async function removeTrackerBtn() {
+  const sel = document.getElementById('tb-remove-sel');
+  const fbKey = sel?.value;
+  if(!fbKey){ alert('Choisis un bouton à retirer.'); return; }
+  setSyncStatus('wait');
+  await remove(ref(db,`users/${currentUID}/${ws}/tracker_buttons/${fbKey}`));
+}
+
+// ---- AUTO WEEKLY REPORT ----
+// Runs on every app load — generates report if Monday 4am has passed and report not yet done
+function checkAutoWeeklyReport() {
+  const now = new Date();
+  const reports = objToArr(wsd().weekly_reports||{});
+
+  // Find the most recent Monday 4am that has passed
+  const d = new Date(now);
+  // Days since last monday: 0=Mon, 1=Tue ... 6=Sun (JS: 0=Sun, 1=Mon...)
+  const dayOfWeek = d.getDay(); // 0=Sun
+  const daysSinceMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const lastMonday4am = new Date(d);
+  lastMonday4am.setDate(d.getDate() - daysSinceMon);
+  lastMonday4am.setHours(4, 0, 0, 0);
+
+  // If we haven't passed Monday 4am yet this week, use previous Monday
+  if(now < lastMonday4am) {
+    lastMonday4am.setDate(lastMonday4am.getDate() - 7);
+  }
+
+  const reportTs = lastMonday4am.getTime();
+
+  // Only generate if this Monday 4am is after WEEK1_START and no report exists for it
+  if(reportTs < WEEK1_START) return;
+  const alreadyDone = reports.some(r => Math.abs(r.generatedFor - reportTs) < 3600000);
+  if(alreadyDone) return;
+
+  // Generate the report for the 168h window ending at reportTs
+  generateWeeklyReport(reportTs);
+}
+
+async function generateWeeklyReport(reportTs) {
+  const windowStart = reportTs - 7 * 86400000; // 168h before Monday 4am
+  const windowEnd   = reportTs;
+
+  const tasks      = objToArr(wsd().tasks||{});
+  const history    = objToArr(wsd().history||{});
+  const journal    = objToArr(wsd().journal||{});
+  const checkin    = objToArr(wsd().checkin||{});
+  const trackerEnt = objToArr(wsd().tracker||{});
+  const ITEMS      = getTrackerItems();
+
+  // Tasks completed in window
+  const completedTasks = history.filter(h=>h.completedAt>=windowStart&&h.completedAt<windowEnd);
+  // Tasks created in window
+  const addedTasks = [...tasks,...history].filter(t=>t.createdAt>=windowStart&&t.createdAt<windowEnd);
+  // Journal entries in window
+  const journalEntries = journal.filter(j=>j.createdAt>=windowStart&&j.createdAt<windowEnd);
+  // Tracker counts
+  const trackerCounts = {};
+  ITEMS.forEach(i=>trackerCounts[i.key]=0);
+  trackerEnt.filter(e=>e.ts>=windowStart&&e.ts<windowEnd).forEach(e=>{ if(trackerCounts[e.key]!=null) trackerCounts[e.key]++; });
+  // Check-in averages
+  const dailies = checkin.filter(e=>!e.weekly&&e.createdAt>=windowStart&&e.createdAt<windowEnd);
+  const avgOf = key => { const v=dailies.filter(e=>e[key]!=null); return v.length?Math.round(v.reduce((s,e)=>s+(+e[key]),0)/v.length*100)/100:null; };
+  const avgEnergie = avgOf('energie');
+  const avgPensees = avgOf('pensees');
+  const avgCorps   = avgOf('corps');
+  const avgNote    = dailies.length
+    ? Math.round(dailies.filter(e=>e.energie!=null&&e.pensees!=null&&e.corps!=null)
+        .reduce((s,e)=>s+((+e.energie+(+e.pensees)+(+e.corps))/3),0)/dailies.length*100)/100
+    : null;
+  // Poids: latest weekly checkin before windowEnd vs week before
+  const weeklyBefore = checkin.filter(e=>e.weekly&&e.createdAt<windowEnd).sort((a,b)=>b.createdAt-a.createdAt);
+  const curPoids  = weeklyBefore[0]?.poids!=null ? +weeklyBefore[0].poids : null;
+  const prevPoids = weeklyBefore[1]?.poids!=null ? +weeklyBefore[1].poids : null;
+  // Poids vs S1 (very first weekly entry)
+  const firstWeekly = checkin.filter(e=>e.weekly&&e.poids!=null).sort((a,b)=>a.createdAt-b.createdAt);
+  const s1Poids = firstWeekly[0]?.poids!=null ? +firstWeekly[0].poids : null;
+
+  const weekNum = Math.floor((reportTs - WEEK1_START) / WEEK_MS) + 1;
+
+  const report = {
+    generatedFor: reportTs,
+    weekNum,
+    windowStart,
+    windowEnd,
+    completedCount: completedTasks.length,
+    addedCount: addedTasks.length,
+    journalCount: journalEntries.length,
+    trackerCounts,
+    trackerItems: ITEMS.map(i=>({key:i.key,label:i.label,cat:i.cat})),
+    avgEnergie, avgPensees, avgCorps, avgNote,
+    curPoids, prevPoids, s1Poids,
+    poidsDeltaWeek: curPoids!=null&&prevPoids!=null ? Math.round((curPoids-prevPoids)*10)/10 : null,
+    poidsDeltaS1:   curPoids!=null&&s1Poids!=null  ? Math.round((curPoids-s1Poids)*10)/10   : null,
+    completedTitles: completedTasks.slice(0,5).map(t=>t.title||''),
+    journalPreviews: journalEntries.slice(0,3).map(j=>(j.text||'').substring(0,80)),
+  };
+
+  setSyncStatus('wait');
+  await push(userDataPath(`${ws}/weekly_reports`), report);
+}
+
+function renderData() {
+  const el = document.getElementById('panel-data');
+  const reports = objToArr(wsd().weekly_reports||{}).sort((a,b)=>b.generatedFor-a.generatedFor);
+
+  if(!reports.length) {
+    el.innerHTML = `<div class="data-empty">📊 Aucun rapport disponible.<br><br>Les rapports sont générés automatiquement chaque lundi à 4h AM, à partir de la semaine 1 (27 avril 2026).</div>`;
+    return;
+  }
+
+  el.innerHTML = reports.map(r=>{
+    const dateStr = new Date(r.generatedFor).toLocaleDateString('fr-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    const winStart = new Date(r.windowStart).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+    const winEnd   = new Date(r.windowEnd).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+
+    const ITEMS = r.trackerItems||getTrackerItems();
+    const green = ITEMS.filter(i=>i.cat==='green');
+    const red   = ITEMS.filter(i=>i.cat==='red');
+    const gTotal = green.reduce((s,i)=>s+(r.trackerCounts[i.key]||0),0);
+    const rTotal = red.reduce((s,i)=>s+(r.trackerCounts[i.key]||0),0);
+
+    const poidsWeekStr = r.poidsDeltaWeek!=null
+      ? `<span class="data-poids-badge ${r.poidsDeltaWeek>0?'pos':'neg'}">${r.poidsDeltaWeek>0?'+':''}${r.poidsDeltaWeek} lbs vs sem. précédente</span>` : '';
+    const poidsS1Str = r.poidsDeltaS1!=null
+      ? `<span class="data-poids-badge ${r.poidsDeltaS1>0?'pos':'neg'}">${r.poidsDeltaS1>0?'+':''}${r.poidsDeltaS1} lbs vs S1</span>` : '';
+    const curPoidsStr = r.curPoids!=null ? `<span class="data-poids-badge">⚖️ ${r.curPoids} lbs</span>` : '';
+
+    return `<div class="data-report-card">
+      <div class="data-report-header">
+        <div class="data-report-title">Semaine ${r.weekNum}</div>
+        <div class="data-report-date">${winStart} → ${winEnd} · généré le ${dateStr}</div>
+      </div>
+      <div class="data-grid">
+        <div class="data-stat"><div class="data-stat-val">${r.completedCount}</div><div class="data-stat-lbl">Tâches complétées</div></div>
+        <div class="data-stat"><div class="data-stat-val">${r.addedCount}</div><div class="data-stat-lbl">Tâches ajoutées</div></div>
+        <div class="data-stat"><div class="data-stat-val">${r.journalCount}</div><div class="data-stat-lbl">Entrées journal</div></div>
+        <div class="data-stat"><div class="data-stat-val">${r.avgNote!=null?r.avgNote:'—'}</div><div class="data-stat-lbl">Note moyenne check-in</div></div>
+      </div>
+      ${r.avgEnergie!=null||r.avgPensees!=null||r.avgCorps!=null?`
+      <div class="data-section-lbl">Check-in moyennes</div>
+      <div class="data-tracker-grid">
+        ${r.avgEnergie!=null?`<span class="data-tracker-pill green">⚡ Énergie: ${r.avgEnergie}</span>`:''}
+        ${r.avgPensees!=null?`<span class="data-tracker-pill" style="background:#F3EEF8;color:#6030A0">🧠 Pensées: ${r.avgPensees}</span>`:''}
+        ${r.avgCorps!=null?`<span class="data-tracker-pill green">💪 Corps: ${r.avgCorps}</span>`:''}
+      </div>`:''}
+      <div class="data-section-lbl">Poids</div>
+      <div class="data-poids-row">${curPoidsStr}${poidsWeekStr}${poidsS1Str}</div>
+      <div class="data-section-lbl">Tracker — Positif (${gTotal}) / À surveiller (${rTotal})</div>
+      <div class="data-tracker-grid">
+        ${green.map(i=>`<span class="data-tracker-pill green">${i.label}: ${r.trackerCounts[i.key]||0}</span>`).join('')}
+        ${red.map(i=>`<span class="data-tracker-pill red">${i.label}: ${r.trackerCounts[i.key]||0}</span>`).join('')}
+      </div>
+      ${r.completedTitles&&r.completedTitles.length?`
+      <div class="data-section-lbl">Tâches complétées</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.8">${r.completedTitles.map(t=>`• ${t}`).join('<br>')}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
 function renderAll() {
   if(activeTab==='tasks') renderTasks();
   else if(activeTab==='cats') renderCats();
@@ -1267,6 +1499,7 @@ function renderAll() {
   else if(activeTab==='history') renderHistory();
   else if(activeTab==='checkin') renderCheckin();
   else if(activeTab==='tracker') renderTracker();
+  else if(activeTab==='data') renderData();
 }
 
 onAuthStateChanged(auth, (user) => {
@@ -1303,7 +1536,7 @@ function exportHistoryCSV() {
   URL.revokeObjectURL(url);
 }
 
-window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, seedCheckinData, deleteCheckin, logTracker, exportTrackerArchiveCSV, exportTrackerQArchiveCSV };
+window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, seedCheckinData, deleteCheckin, logTracker, exportTrackerArchiveCSV, exportTrackerQArchiveCSV, addTrackerBtn, removeTrackerBtn };
 </script>
 </body>
 </html>
