@@ -1053,6 +1053,7 @@ function getCurrentQ1Start() {
 
 function renderTracker() {
   const el = document.getElementById('panel-tracker');
+  const ITEMS = getTrackerItems();
   const entries = objToArr(wsd().tracker||{});
   const archives = objToArr(wsd().tracker_archives||{}).sort((a,b)=>b.weekStart-a.weekStart);
   const qArchives = objToArr(wsd().tracker_q_archives||{}).sort((a,b)=>b.startTs-a.startTs);
@@ -1083,12 +1084,11 @@ function renderTracker() {
   const q1C     = counts(q1Start, Math.min(now, q1End));
 
   function catTotal(c, cat) {
-    return getTrackerItems().filter(i=>i.cat===cat).reduce((s,i)=>s+c[i.key],0);
+    return ITEMS.filter(i=>i.cat===cat).reduce((s,i)=>s+(c[i.key]||0),0);
   }
 
-  const green = getTrackerItems().filter(i=>i.cat==='green');
-  const red   = getTrackerItems().filter(i=>i.cat==='red');
-  const allItems = getTrackerItems();
+  const green = ITEMS.filter(i=>i.cat==='green');
+  const red   = ITEMS.filter(i=>i.cat==='red');
 
   function btnGroup(items) {
     return items.map(i=>`
