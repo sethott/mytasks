@@ -411,7 +411,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="panel" id="panel-data"></div>
       <div class="panel" id="panel-history"></div>
       <div class="panel" id="panel-checkin"></div>
-      <div class="panel" id="panel-data"></div>
     </div>
   </div>
 </div>
@@ -1164,7 +1163,7 @@ function getTrackerItems() {
 }
 
 // Epoch anchors — fixed start dates
-const WEEK1_START  = new Date('2026-04-27T00:00:00').getTime();
+const WEEK1_START  = new Date('2026-04-27T04:00:00').getTime();
 const Q1_START     = new Date('2026-04-27T00:00:00').getTime();
 const Q1_DAYS      = 91;
 const WEEK_MS      = 7 * 86400000;
@@ -1580,60 +1579,109 @@ async function generateWeeklyReport(reportTs) {
 
 function renderData() {
   const el = document.getElementById('panel-data');
-  const reports = objToArr(wsd().weekly_reports||{}).sort((a,b)=>b.generatedFor-a.generatedFor);
+  if(!el) return;
+  const now = Date.now();
 
-  if(!reports.length) {
-    el.innerHTML = `<div class="data-empty">📊 Aucun rapport disponible.<br><br>Les rapports sont générés automatiquement chaque lundi à 4h AM, à partir de la semaine 1 (27 avril 2026).</div>`;
+  if(now < WEEK1_START) {
+    el.innerHTML = `<div class="data-empty">📊 Les rapports commencent à partir de la semaine 1 (27 avril 2026 à 4h AM).</div>`;
     return;
   }
 
-  el.innerHTML = reports.map(r=>{
-    const dateStr = new Date(r.generatedFor).toLocaleDateString('fr-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-    const winStart = new Date(r.windowStart).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
-    const winEnd   = new Date(r.windowEnd).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+  const tasks      = objToArr(wsd().tasks||{});
+  const history    = objToArr(wsd().history||{});
+  const journal    = objToArr(wsd().journal||{});
+  const checkin    = objToArr(wsd().checkin||{});
+  const trackerEnt = objToArr(wsd().tracker||{});
+  const ITEMS      = getTrackerItems();
 
-    const ITEMS = r.trackerItems||getTrackerItems();
+  const totalWeeks = Math.floor((now - WEEK1_START) / WEEK_MS) + 1;
+  let html = '';
+
+  for(let weekNum = totalWeeks; weekNum >= 1; weekNum--) {
+    const windowStart = WEEK1_START + (weekNum - 1) * WEEK_MS;
+    const windowEnd   = Math.min(WEEK1_START + weekNum * WEEK_MS, now);
+    const isCurrent   = weekNum === totalWeeks;
+
+    const winStartStr = new Date(windowStart).toLocaleDateString('fr-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    const winEndStr   = isCurrent
+      ? 'maintenant'
+      : new Date(windowEnd).toLocaleDateString('fr-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    // Tâches
+    const completedTasks = history.filter(h=>h.completedAt>=windowStart&&h.completedAt<windowEnd);
+    const addedTasks = [...tasks,...history].filter(t=>t.createdAt>=windowStart&&t.createdAt<windowEnd);
+
+    // Journal
+    const journalEntries = journal.filter(j=>j.createdAt>=windowStart&&j.createdAt<windowEnd);
+
+    // Tracker
+    const trackerCounts = {};
+    ITEMS.forEach(i=>trackerCounts[i.key]=0);
+    trackerEnt.filter(e=>e.ts>=windowStart&&e.ts<windowEnd).forEach(e=>{ if(trackerCounts[e.key]!=null) trackerCounts[e.key]++; });
+
+    // Check-in
+    const dailies = checkin.filter(e=>!e.weekly&&e.createdAt>=windowStart&&e.createdAt<windowEnd);
+    const avgOf = key=>{ const v=dailies.filter(e=>e[key]!=null); return v.length?Math.round(v.reduce((s,e)=>s+(+e[key]),0)/v.length*100)/100:null; };
+    const avgEnergie = avgOf('energie');
+    const avgPensees = avgOf('pensees');
+    const avgCorps   = avgOf('corps');
+    const avgNote = dailies.length
+      ? Math.round(dailies.filter(e=>e.energie!=null&&e.pensees!=null&&e.corps!=null)
+          .reduce((s,e)=>s+((+e.energie+(+e.pensees)+(+e.corps))/3),0)/dailies.length*100)/100
+      : null;
+
+    // Poids — dernière entrée hebdomadaire avant la fin de la fenêtre
+    const weeklyBefore = checkin.filter(e=>e.weekly&&e.createdAt<windowEnd).sort((a,b)=>b.createdAt-a.createdAt);
+    const curPoids  = weeklyBefore[0]?.poids!=null ? +weeklyBefore[0].poids : null;
+    const prevPoids = weeklyBefore[1]?.poids!=null ? +weeklyBefore[1].poids : null;
+    const firstWeekly = checkin.filter(e=>e.weekly&&e.poids!=null).sort((a,b)=>a.createdAt-b.createdAt);
+    const s1Poids = firstWeekly[0]?.poids!=null ? +firstWeekly[0].poids : null;
+    const poidsDeltaWeek = curPoids!=null&&prevPoids!=null ? Math.round((curPoids-prevPoids)*10)/10 : null;
+    const poidsDeltaS1   = curPoids!=null&&s1Poids!=null  ? Math.round((curPoids-s1Poids)*10)/10   : null;
+
     const green = ITEMS.filter(i=>i.cat==='green');
     const red   = ITEMS.filter(i=>i.cat==='red');
-    const gTotal = green.reduce((s,i)=>s+(r.trackerCounts[i.key]||0),0);
-    const rTotal = red.reduce((s,i)=>s+(r.trackerCounts[i.key]||0),0);
+    const gTotal = green.reduce((s,i)=>s+(trackerCounts[i.key]||0),0);
+    const rTotal = red.reduce((s,i)=>s+(trackerCounts[i.key]||0),0);
 
-    const poidsWeekStr = r.poidsDeltaWeek!=null
-      ? `<span class="data-poids-badge ${r.poidsDeltaWeek>0?'pos':'neg'}">${r.poidsDeltaWeek>0?'+':''}${r.poidsDeltaWeek} lbs vs sem. précédente</span>` : '';
-    const poidsS1Str = r.poidsDeltaS1!=null
-      ? `<span class="data-poids-badge ${r.poidsDeltaS1>0?'pos':'neg'}">${r.poidsDeltaS1>0?'+':''}${r.poidsDeltaS1} lbs vs S1</span>` : '';
-    const curPoidsStr = r.curPoids!=null ? `<span class="data-poids-badge">⚖️ ${r.curPoids} lbs</span>` : '';
+    const curPoidsStr  = curPoids!=null ? `<span class="data-poids-badge">⚖️ ${curPoids} lbs</span>` : '';
+    const poidsWeekStr = poidsDeltaWeek!=null
+      ? `<span class="data-poids-badge ${poidsDeltaWeek>0?'pos':'neg'}">${poidsDeltaWeek>0?'+':''}${poidsDeltaWeek} lbs vs sem. précédente</span>` : '';
+    const poidsS1Str = poidsDeltaS1!=null
+      ? `<span class="data-poids-badge ${poidsDeltaS1>0?'pos':'neg'}">${poidsDeltaS1>0?'+':''}${poidsDeltaS1} lbs vs S1</span>` : '';
 
-    return `<div class="data-report-card">
+    html += `<div class="data-report-card">
       <div class="data-report-header">
-        <div class="data-report-title">Semaine ${r.weekNum}</div>
-        <div class="data-report-date">${winStart} → ${winEnd} · généré le ${dateStr}</div>
+        <div class="data-report-title">Semaine ${weekNum}${isCurrent?` <span style="font-size:12px;background:var(--blue-light);color:var(--blue-dark);padding:2px 8px;border-radius:10px;font-weight:500">en cours</span>`:''}</div>
+        <div class="data-report-date">${winStartStr} → ${winEndStr}</div>
       </div>
       <div class="data-grid">
-        <div class="data-stat"><div class="data-stat-val">${r.completedCount}</div><div class="data-stat-lbl">Tâches complétées</div></div>
-        <div class="data-stat"><div class="data-stat-val">${r.addedCount}</div><div class="data-stat-lbl">Tâches ajoutées</div></div>
-        <div class="data-stat"><div class="data-stat-val">${r.journalCount}</div><div class="data-stat-lbl">Entrées journal</div></div>
-        <div class="data-stat"><div class="data-stat-val">${r.avgNote!=null?r.avgNote:'—'}</div><div class="data-stat-lbl">Note moyenne check-in</div></div>
+        <div class="data-stat"><div class="data-stat-val">${completedTasks.length}</div><div class="data-stat-lbl">Tâches complétées</div></div>
+        <div class="data-stat"><div class="data-stat-val">${addedTasks.length}</div><div class="data-stat-lbl">Tâches ajoutées</div></div>
+        <div class="data-stat"><div class="data-stat-val">${journalEntries.length}</div><div class="data-stat-lbl">Entrées journal</div></div>
+        <div class="data-stat"><div class="data-stat-val">${avgNote!=null?avgNote:'—'}</div><div class="data-stat-lbl">Note moyenne check-in</div></div>
       </div>
-      ${r.avgEnergie!=null||r.avgPensees!=null||r.avgCorps!=null?`
+      ${avgEnergie!=null||avgPensees!=null||avgCorps!=null?`
       <div class="data-section-lbl">Check-in moyennes</div>
       <div class="data-tracker-grid">
-        ${r.avgEnergie!=null?`<span class="data-tracker-pill green">⚡ Énergie: ${r.avgEnergie}</span>`:''}
-        ${r.avgPensees!=null?`<span class="data-tracker-pill" style="background:#F3EEF8;color:#6030A0">🧠 Pensées: ${r.avgPensees}</span>`:''}
-        ${r.avgCorps!=null?`<span class="data-tracker-pill green">💪 Corps: ${r.avgCorps}</span>`:''}
+        ${avgEnergie!=null?`<span class="data-tracker-pill green">⚡ Énergie: ${avgEnergie}</span>`:''}
+        ${avgPensees!=null?`<span class="data-tracker-pill" style="background:#F3EEF8;color:#6030A0">🧠 Pensées: ${avgPensees}</span>`:''}
+        ${avgCorps!=null?`<span class="data-tracker-pill green">💪 Corps: ${avgCorps}</span>`:''}
       </div>`:''}
       <div class="data-section-lbl">Poids</div>
       <div class="data-poids-row">${curPoidsStr}${poidsWeekStr}${poidsS1Str}</div>
       <div class="data-section-lbl">Tracker — Positif (${gTotal}) / À surveiller (${rTotal})</div>
       <div class="data-tracker-grid">
-        ${green.map(i=>`<span class="data-tracker-pill green">${i.label}: ${r.trackerCounts[i.key]||0}</span>`).join('')}
-        ${red.map(i=>`<span class="data-tracker-pill red">${i.label}: ${r.trackerCounts[i.key]||0}</span>`).join('')}
+        ${green.map(i=>`<span class="data-tracker-pill green">${i.label}: ${trackerCounts[i.key]||0}</span>`).join('')}
+        ${red.map(i=>`<span class="data-tracker-pill red">${i.label}: ${trackerCounts[i.key]||0}</span>`).join('')}
       </div>
-      ${r.completedTitles&&r.completedTitles.length?`
+      ${completedTasks.length?`
       <div class="data-section-lbl">Tâches complétées</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.8">${r.completedTitles.map(t=>`• ${t}`).join('<br>')}</div>`:''}
+      <div style="font-size:12px;color:var(--text2);line-height:1.8">${completedTasks.slice(0,5).map(t=>`• ${t.title||''}`).join('<br>')}</div>`:''}
     </div>`;
-  }).join('');
+  }
+
+  el.innerHTML = html || `<div class="data-empty">📊 Aucune donnée disponible pour la semaine en cours.</div>`;
 }
 
 function renderAll() {
