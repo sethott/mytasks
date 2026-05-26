@@ -1024,11 +1024,10 @@ async function saveCheckin(isWeekly) {
     entry.poids  = getVal('ci-poids');
     if(entry.repos==null&&entry.couple==null&&entry.poids==null){ alert('Entre au moins une valeur.'); return; }
 
-    // Auto-compute averages from the 7 daily entries closest before the selected date
+    // Daily entries in the 7-day window ending on the selected date (selected day inclusive)
+    const dayStart = ts - 12 * 3600000; // midnight of selected day (ts is noon)
     const allDaily = objToArr(wsd().checkin||{})
-      .filter(e=>!e.weekly && e.createdAt <= ts)
-      .sort((a,b)=>b.createdAt-a.createdAt)
-      .slice(0,7);
+      .filter(e=>!e.weekly && e.createdAt >= dayStart - 6*86400000 && e.createdAt < dayStart + 86400000);
 
     const avg = key => {
       const vals = allDaily.filter(e=>e[key]!=null);
