@@ -440,6 +440,7 @@ const JOURNAL_CATS = {
   finance: { label: 'Finance', bg: '#E8FDF2', c: '#1A7A48' },
   lucie:   { label: 'Lucie',   bg: '#FDE8F3', c: '#A03070' },
   medical: { label: 'Médical', bg: '#FDF4E3', c: '#9A6010' },
+  couple:  { label: 'Couple',  bg: '#FFE8ED', c: '#B02040' },
 };
 
 const WS = {
@@ -490,6 +491,10 @@ function fmtDur(ms) {
   if(m<60) return m+'min';
   const h=Math.floor(m/60),r=m%60;
   return h+'h'+(r?r+'m':'');
+}
+function localDateISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function pill(cat) {
   const p = cfg().pills[cat]||{bg:'#EEF0F3',c:'#607080'};
@@ -707,7 +712,7 @@ function renderCats() {
 function renderJournal() {
   const el = document.getElementById('panel-journal');
   const allEntries = objToArr(wsd().journal);
-  const todayISO = new Date().toISOString().split('T')[0];
+  const todayISO = localDateISO();
 
   function jCatPill(cat) {
     const c = JOURNAL_CATS[cat||'life'];
@@ -863,7 +868,7 @@ function renderCheckin() {
   const checkinEmpty = Object.keys(data.vie.checkin||{}).length === 0;
   const showImport = !seeded || checkinEmpty;
   // ---- SAISIE ----
-  const todayISO = new Date().toISOString().split('T')[0];
+  const todayISO = localDateISO();
   html += `<div class="ci-subpanel${ciSubTab==='saisie'?' active':''}">
     ${showImport ? `<div style="background:#FFF8E8;border:1.5px solid #F0C040;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
       <div style="font-size:13px;color:#6A4A00;">📥 <strong>Import données Excel</strong> — 25 entrées quotidiennes + 4 hebdomadaires du fichier Checkin_1.xlsx</div>
@@ -1170,15 +1175,8 @@ const WEEK_MS      = 7 * 86400000;
 const Q1_MS        = Q1_DAYS * 86400000;
 
 function getCurrentWeekStart() {
-  // Find most recent weekly checkin to determine current week start
-  const weeklies = objToArr(wsd().checkin||{})
-    .filter(e=>e.weekly)
-    .sort((a,b)=>b.createdAt-a.createdAt);
-  if(!weeklies.length) return WEEK1_START;
-  // The latest weekly checkin marks the start of the NEXT week
-  const lastWeeklyTs = weeklies[0].createdAt;
-  // If latest weekly is after WEEK1_START, current week starts at last weekly
-  return lastWeeklyTs > WEEK1_START ? lastWeeklyTs : WEEK1_START;
+  const elapsed = Date.now() - WEEK1_START;
+  return WEEK1_START + Math.floor(elapsed / WEEK_MS) * WEEK_MS;
 }
 
 function getCurrentQ1Start() {
@@ -1329,6 +1327,27 @@ function renderTracker() {
     archiveHtml += '</div>';
   }
 
+  const sortedEntries = [...entries].sort((a,b)=>b.ts-a.ts);
+  const logRows = sortedEntries.map(e=>{
+    const item = ITEMS.find(i=>i.key===e.key);
+    const label = item ? item.label : e.key;
+    const cat = item ? item.cat : 'green';
+    const d = new Date(e.ts);
+    const dateStr = d.toLocaleDateString('fr-CA',{weekday:'short',month:'short',day:'numeric'});
+    const timeStr = d.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
+    return `<tr><td style="white-space:nowrap">${dateStr}</td><td style="font-family:'DM Mono',monospace">${timeStr}</td><td><span class="${cat==='green'?'green-badge':'red-badge'}">${label}</span></td></tr>`;
+  }).join('');
+  const logHtml = '<div class="tracker-divider"></div>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+    + '<div class="tracker-section-title" style="margin:0">📋 Journal des entrées (' + sortedEntries.length + ')</div>'
+    + (sortedEntries.length ? '<button class="btn-export-sm" onclick="APP.exportTrackerLogCSV()">⬇ Export CSV</button>' : '')
+    + '</div>'
+    + (sortedEntries.length
+        ? '<div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">'
+          + '<table class="checkin-table"><thead><tr><th>Date</th><th>Heure</th><th>Activité</th></tr></thead>'
+          + '<tbody>' + logRows + '</tbody></table></div>'
+        : '<div class="col-empty">Aucune entrée enregistrée</div>');
+
   el.innerHTML = `
     <div class="tracker-section-title">✅ Positif</div>
     <div class="tracker-btns">${btnGroup(green)}</div>
@@ -1360,7 +1379,8 @@ function renderTracker() {
       ${periodCard(`📆 ${q1Label}`, q1C, `${q1DateStr} · ${q1DaysLeft}j restants`)}
       ${periodCard('🗓 Tout le temps', allC)}
     </div>
-    ${archiveHtml}`;
+    ${archiveHtml}
+    ${logHtml}`;
 }
 
 async function logTracker(key) {
@@ -1450,6 +1470,21 @@ function exportTrackerQArchiveCSV(fbKey) {
   const rows = [['Item','Catégorie','Nombre']];
   getTrackerItems().forEach(i=>rows.push([i.label, i.cat==='green'?'Positif':'À surveiller', a.counts[i.key]||0]));
   downloadCSV(rows, `tracker-Q${a.quarterNum}.csv`);
+}
+
+function exportTrackerLogCSV() {
+  const entries = objToArr(wsd().tracker||{}).sort((a,b)=>b.ts-a.ts);
+  if(!entries.length){ alert('Aucune entrée à exporter.'); return; }
+  const ITEMS = getTrackerItems();
+  const rows = [['Date','Heure','Activité','Catégorie']];
+  entries.forEach(e=>{
+    const item = ITEMS.find(i=>i.key===e.key);
+    const label = item ? item.label : e.key;
+    const cat = item ? (item.cat==='green' ? 'Positif' : 'À surveiller') : '';
+    const d = new Date(e.ts);
+    rows.push([d.toLocaleDateString('fr-CA'), d.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'}), label, cat]);
+  });
+  downloadCSV(rows, 'tracker-journal.csv');
 }
 
 function downloadCSV(rows, filename) {
@@ -1728,7 +1763,7 @@ function exportHistoryCSV() {
   URL.revokeObjectURL(url);
 }
 
-window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, setJournalFilter, startEditJournal, cancelEditJournal, saveJournalEdit, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, seedCheckinData, deleteCheckin, logTracker, exportTrackerArchiveCSV, exportTrackerQArchiveCSV, addTrackerBtn, removeTrackerBtn };
+window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, setJournalFilter, startEditJournal, cancelEditJournal, saveJournalEdit, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, seedCheckinData, deleteCheckin, logTracker, exportTrackerArchiveCSV, exportTrackerQArchiveCSV, exportTrackerLogCSV, addTrackerBtn, removeTrackerBtn };
 </script>
 </body>
 </html>
