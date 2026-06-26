@@ -1691,6 +1691,8 @@ onAuthStateChanged(auth, async (user) => {
     try {
       const emailKey = user.email.replace(/\./g, ',');
       console.log('[auth] checking access for key:', emailKey);
+      const allSnap = await get(ref(db, 'allowed_emails'));
+      console.log('[auth] all allowed_emails in DB:', JSON.stringify(allSnap.val()));
       const snap = await get(ref(db, `allowed_emails/${emailKey}`));
       console.log('[auth] allowed_emails snap exists:', snap.exists());
       if(!snap.exists()) {
