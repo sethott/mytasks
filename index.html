@@ -1688,11 +1688,20 @@ function renderAll() {
 
 onAuthStateChanged(auth, async (user) => {
   if(user) {
-    const emailKey = user.email.replace(/\./g, ',');
-    const snap = await get(ref(db, `allowed_emails/${emailKey}`));
-    if(!snap.exists()) {
+    try {
+      const emailKey = user.email.replace(/\./g, ',');
+      console.log('[auth] checking access for key:', emailKey);
+      const snap = await get(ref(db, `allowed_emails/${emailKey}`));
+      console.log('[auth] allowed_emails snap exists:', snap.exists());
+      if(!snap.exists()) {
+        signOut(auth);
+        document.getElementById('login-screen').querySelector('.login-note').textContent = 'Accès sur invitation seulement. Contacte Sylvain pour obtenir un accès.';
+        return;
+      }
+    } catch(e) {
+      console.error('[auth] access check failed:', e);
       signOut(auth);
-      document.getElementById('login-screen').querySelector('.login-note').textContent = 'Accès sur invitation seulement. Contacte Sylvain pour obtenir un accès.';
+      document.getElementById('login-screen').querySelector('.login-note').textContent = 'Erreur de vérification d\'accès. Réessaie plus tard.';
       return;
     }
     currentUID = user.uid;
