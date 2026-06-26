@@ -417,7 +417,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getDatabase, ref, onValue, push, remove, set as fbSet } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+import { getDatabase, ref, onValue, push, remove, set as fbSet, get } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -529,41 +529,6 @@ function startListening() {
   }, () => setSyncStatus('off'));
 }
 
-async function seedCheckinData() {
-  // Write flag first to prevent double-import
-  await fbSet(ref(db,`users/${currentUID}/_flags/checkinSeeded`), true);
-  const daily = [
-    {d:'2026-03-30',e:5,p:6,c:8},{d:'2026-03-31',e:6,p:4,c:4},{d:'2026-04-01',e:6,p:4,c:5},
-    {d:'2026-04-02',e:5,p:5,c:4},{d:'2026-04-03',e:5,p:6,c:4},{d:'2026-04-04',e:6,p:7,c:5},
-    {d:'2026-04-05',e:6,p:7,c:6},{d:'2026-04-06',e:4,p:8,c:8},{d:'2026-04-07',e:7,p:9,c:6},
-    {d:'2026-04-08',e:6,p:6,c:5},{d:'2026-04-09',e:6,p:6,c:3},{d:'2026-04-10',e:6,p:6,c:3},
-    {d:'2026-04-11',e:7,p:7,c:5},{d:'2026-04-12',e:4,p:8,c:3},{d:'2026-04-13',e:7,p:8,c:5},
-    {d:'2026-04-14',e:6,p:6,c:7},{d:'2026-04-15',e:5.5,p:6,c:8},{d:'2026-04-16',e:6,p:9,c:8},
-    {d:'2026-04-17',e:5.5,p:9,c:4.5},{d:'2026-04-18',e:3,p:9,c:3.5},{d:'2026-04-19',e:5,p:9,c:4.5},
-    {d:'2026-04-20',e:4,p:8,c:5},{d:'2026-04-21',e:5,p:5,c:6},{d:'2026-04-22',e:5,p:6,c:7},
-    {d:'2026-04-23',e:3,p:6,c:3}
-  ];
-  const weeklyData = [
-    {d:'2026-03-30',r:8,couple:6,poids:263.6},
-    {d:'2026-04-06',r:7,couple:6,poids:259.6},
-    {d:'2026-04-13',r:5,couple:6,poids:258.8},
-    {d:'2026-04-20',r:null,couple:null,poids:257}
-  ];
-  const promises = [];
-  for(const row of daily) {
-    const ts = new Date(row.d+'T12:00:00').getTime();
-    promises.push(push(userDataPath(`${ws}/checkin`),{createdAt:ts,weekly:false,energie:row.e,pensees:row.p,corps:row.c}));
-  }
-  for(const row of weeklyData) {
-    const ts = new Date(row.d+'T08:00:00').getTime();
-    const entry = {createdAt:ts,weekly:true};
-    if(row.r!=null) entry.repos=row.r;
-    if(row.couple!=null) entry.couple=row.couple;
-    if(row.poids!=null) entry.poids=row.poids;
-    promises.push(push(userDataPath(`${ws}/checkin`),entry));
-  }
-  await Promise.all(promises);
-}
 
 function showTab(t) {
   activeTab = t;
@@ -864,16 +829,9 @@ function renderCheckin() {
   let html = `<div class="ci-subtabs">${subtabs.map(t=>`
     <div class="ci-subtab${ciSubTab===t.id?' active':''}" onclick="APP.setCiTab('${t.id}')">${t.label}</div>`).join('')}</div>`;
 
-  const seeded = data._flags && data._flags.checkinSeeded;
-  const checkinEmpty = Object.keys(data.vie.checkin||{}).length === 0;
-  const showImport = !seeded || checkinEmpty;
   // ---- SAISIE ----
   const todayISO = localDateISO();
   html += `<div class="ci-subpanel${ciSubTab==='saisie'?' active':''}">
-    ${showImport ? `<div style="background:#FFF8E8;border:1.5px solid #F0C040;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-      <div style="font-size:13px;color:#6A4A00;">📥 <strong>Import données Excel</strong> — 25 entrées quotidiennes + 4 hebdomadaires du fichier Checkin_1.xlsx</div>
-      <button onclick="APP.seedCheckinData()" style="flex-shrink:0;padding:8px 16px;background:#0070BA;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Importer</button>
-    </div>` : ''}
     <div class="checkin-form-grid">
       <div class="checkin-card">
         <div class="checkin-card-title">📅 Check-in quotidien</div>
@@ -1728,8 +1686,15 @@ function renderAll() {
   else if(activeTab==='data') renderData();
 }
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if(user) {
+    const emailKey = user.email.replace(/\./g, ',');
+    const snap = await get(ref(db, `allowed_emails/${emailKey}`));
+    if(!snap.exists()) {
+      signOut(auth);
+      document.getElementById('login-screen').querySelector('.login-note').textContent = 'Accès sur invitation seulement. Contacte Sylvain pour obtenir un accès.';
+      return;
+    }
     currentUID = user.uid;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'flex';
@@ -1762,7 +1727,7 @@ function exportHistoryCSV() {
   URL.revokeObjectURL(url);
 }
 
-window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, setJournalFilter, startEditJournal, cancelEditJournal, saveJournalEdit, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, seedCheckinData, deleteCheckin, logTracker, exportTrackerArchiveCSV, exportTrackerQArchiveCSV, exportTrackerLogCSV, addTrackerBtn, removeTrackerBtn };
+window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, setJournalFilter, startEditJournal, cancelEditJournal, saveJournalEdit, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, deleteCheckin, logTracker, exportTrackerArchiveCSV, exportTrackerQArchiveCSV, exportTrackerLogCSV, addTrackerBtn, removeTrackerBtn };
 </script>
 </body>
 </html>
