@@ -394,6 +394,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .home-empty-sub{font-size:16px;color:var(--text3);max-width:380px;line-height:1.7}
 .btn-add-module{padding:13px 32px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:17px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s}
 .btn-add-module:hover{background:var(--blue-dark)}
+
+/* AGENT BUTTON */
+.btn-agent{font-size:14px;padding:4px 11px;border-radius:6px;border:1px solid rgba(130,196,240,0.45);background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.80);cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;transition:all 0.15s;white-space:nowrap}
+.btn-agent:hover:not(:disabled){border-color:rgba(130,196,240,0.9);color:#fff;background:rgba(255,255,255,0.15)}
+.btn-agent:disabled{opacity:0.55;cursor:default}
+.btn-agent.ok{color:#48D48A;border-color:rgba(72,212,138,0.5)}
+.btn-agent.err{color:#FF6B6B;border-color:rgba(255,107,107,0.5)}
 </style>
 </head>
 <body>
@@ -437,6 +444,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <span class="sync-label" id="sync-label">Connecting...</span>
       </div>
       <div class="user-area">
+        <button class="btn-agent" id="btn-agent" style="display:none" onclick="APP.runWellnessAgent()">🤖 Send to Agent</button>
         <img class="user-avatar" id="user-avatar" src="" alt="">
         <span class="user-name" id="user-name"></span>
         <button class="btn-logout" onclick="APP.logout()">Sign out</button>
@@ -1696,6 +1704,7 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('app-screen').style.display = 'flex';
     document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || '';
     document.getElementById('user-avatar').src = user.photoURL || '';
+    if (currentUID === AGENT_UID) document.getElementById('btn-agent').style.display = '';
     startListening();
   } else {
     currentUID = null;
@@ -1748,6 +1757,176 @@ async function tabDrop(e, targetId) {
   renderTabs();
 }
 
+// ---- WELLNESS AGENT ----
+// API key stored at users/{uid}/settings/agent_api_key in Firebase (set once via console).
+// Mail queue written to users/{uid}/mail_queue — process with a Cloud Function using SendGrid.
+
+const AGENT_UID = '4l1Grd5ztGWTf7gDZSi3YTI3iYH3'; // <-- paste Sylvain's Firebase UID here
+
+function agentBtn() { return document.getElementById('btn-agent'); }
+
+function setAgentBtn(state, label) {
+  const btn = agentBtn();
+  if(!btn) return;
+  btn.disabled = state === 'loading';
+  btn.className = 'btn-agent' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : '');
+  btn.textContent = label;
+}
+
+function get7amTomorrowToronto() {
+  const now = new Date();
+  const todayToronto = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Toronto', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(now);
+  const [y, m, d] = todayToronto.split('-').map(Number);
+  // Noon UTC tomorrow — safely within tomorrow in all timezones
+  const noonUTC = new Date(Date.UTC(y, m - 1, d + 1, 12, 0, 0));
+  // What hour is noon UTC in Toronto on that day?
+  const torontoHour = parseInt(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Toronto', hour: 'numeric', hour12: false
+  }).format(noonUTC), 10);
+  // Shift noon UTC by (7 - torontoHour) hours to land on 7am Toronto
+  return noonUTC.getTime() + (7 - torontoHour) * 3600000;
+}
+
+function collectLast14Days() {
+  const now = Date.now();
+  const cutoff = now - 14 * 86400000;
+
+  // Checkin
+  const checkins = objToArr(data.vie.checkin || {})
+    .filter(e => e.createdAt >= cutoff)
+    .sort((a, b) => a.createdAt - b.createdAt)
+    .map(e => {
+      const date = new Date(e.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+      if (e.weekly) return { date, type: 'weekly', repos: e.repos, couple: e.couple, poids: e.poids };
+      return { date, type: 'daily', energie: e.energie, pensees: e.pensees, corps: e.corps };
+    });
+
+  // Journal
+  const journals = objToArr(data.vie.journal || {})
+    .filter(e => e.createdAt >= cutoff)
+    .sort((a, b) => a.createdAt - b.createdAt)
+    .map(e => {
+      const date = e.entryDate || new Date(e.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+      const hour = new Date(e.createdAt).getHours();
+      return { date, hour_written: hour, text: e.text };
+    });
+
+  // Tracker buttons (to map keys → labels/colors)
+  const btnMap = {};
+  objToArr(data.vie.tracker_buttons || {}).forEach(b => { btnMap[b.key] = { label: b.label, cat: b.cat }; });
+
+  // Tracker log
+  const tracker = objToArr(data.vie.tracker || {})
+    .filter(e => e.ts >= cutoff)
+    .sort((a, b) => a.ts - b.ts)
+    .map(e => {
+      const date = new Date(e.ts).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+      const meta = btnMap[e.key] || { label: e.key, cat: 'unknown' };
+      return { date, key: e.key, label: meta.label, color: meta.cat };
+    });
+
+  return { checkins, journals, tracker };
+}
+
+async function runWellnessAgent() {
+  if (currentUID !== AGENT_UID) return;
+
+  setAgentBtn('loading', 'Analyzing...');
+
+  try {
+    // Fetch API key from Firebase
+    const keySnap = await get(ref(db, `users/${currentUID}/settings/agent_api_key`));
+    if (!keySnap.exists()) throw new Error('No API key found. Set users/{uid}/settings/agent_api_key in Firebase.');
+    const apiKey = keySnap.val();
+
+    const { checkins, journals, tracker } = collectLast14Days();
+
+    const systemPrompt = `You are a personal wellness coach for Sylvain. You know him well:
+
+- He has a boom-bust energy pattern: good days accumulate invisible debt that crashes later.
+- Check-in scores (out of 10): energie = mental energy, pensees = quality of thoughts, corps = body feel.
+- Weekly check-in: repos = sleep/rest quality, couple = relationship wellbeing, poids = weight (kg).
+- Red flags to watch for:
+  • Scores dropping 3+ consecutive days
+  • Journal entries written late at night (hour_written >= 22)
+  • Multiple "red" tracker items (restaurant, binge, alcool) in the same week
+  • Journal language that sounds depleted, pressured, or written under stress
+- When you write to Sylvain, be warm, direct, and specific to HIS patterns — not generic wellness advice.
+- Speak to him like a coach who has been watching the data for weeks.
+
+Analyze the last 14 days of data. Decide if an email check-in is warranted.
+
+Return ONLY valid JSON in this exact shape:
+{"send_email": true, "subject": "...", "body": "..."}
+or
+{"send_email": false}
+
+The body should be plain text (no markdown), personal, and under 250 words.`;
+
+    const userMsg = `Here is Sylvain's last 14 days of data:
+
+CHECK-INS:
+${JSON.stringify(checkins, null, 2)}
+
+JOURNAL ENTRIES:
+${JSON.stringify(journals, null, 2)}
+
+TRACKER EVENTS:
+${JSON.stringify(tracker, null, 2)}`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-calls': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMsg }],
+      }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API error ${resp.status}`);
+    }
+
+    const result = await resp.json();
+    const rawText = result.content?.[0]?.text || '';
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Agent returned unexpected format.');
+    const decision = JSON.parse(jsonMatch[0]);
+
+    if (decision.send_email) {
+      // Write to mail queue — process with a Cloud Function
+      const user = auth.currentUser;
+      await push(ref(db, `users/${currentUID}/mail_queue`), {
+        to: user.email,
+        subject: decision.subject,
+        body: decision.body,
+        send_at: get7amTomorrowToronto(),
+        status: 'pending',
+        created_at: Date.now(),
+      });
+      setAgentBtn('ok', '✓ Email queued for 7 AM');
+    } else {
+      setAgentBtn('ok', '✓ All good');
+    }
+
+    setTimeout(() => setAgentBtn('', '🤖 Send to Agent'), 5000);
+  } catch (e) {
+    console.error('[agent]', e);
+    setAgentBtn('err', '✗ ' + (e.message.length > 40 ? 'Error — check console' : e.message));
+    setTimeout(() => setAgentBtn('', '🤖 Send to Agent'), 4000);
+  }
+}
+
 window.APP = {
   showTab, addTask, completeTask, deleteTask,
   saveJournal, deleteJournal, selectJournal, setJournalFilter,
@@ -1757,6 +1936,7 @@ window.APP = {
   logTracker, addTrackerBtn, removeTrackerBtn,
   exportTrackerArchiveCSV, exportTrackerQArchiveCSV, exportTrackerLogCSV,
   deleteHistory, exportHistoryCSV,
+  runWellnessAgent,
   loginGoogle, logout,
   showModulePicker, hideModulePicker, toggleModule,
   tabDragStart, tabDragOver, tabDragLeave, tabDragEnd, tabDrop,
