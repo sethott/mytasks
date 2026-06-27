@@ -1761,7 +1761,7 @@ async function tabDrop(e, targetId) {
 // API key stored at users/{uid}/settings/agent_api_key in Firebase (set once via console).
 // Mail queue written to users/{uid}/mail_queue — process with a Cloud Function using SendGrid.
 
-const AGENT_UID = '4l1Grd5ztGWTf7gDZSi3YTI3iYH3'; // <-- paste Sylvain's Firebase UID here
+const AGENT_UID = 'REPLACE_WITH_YOUR_UID'; // <-- paste Sylvain's Firebase UID here
 
 function agentBtn() { return document.getElementById('btn-agent'); }
 
@@ -1836,11 +1836,6 @@ async function runWellnessAgent() {
   setAgentBtn('loading', 'Analyzing...');
 
   try {
-    // Fetch API key from Firebase
-    const keySnap = await get(ref(db, `users/${currentUID}/settings/agent_api_key`));
-    if (!keySnap.exists()) throw new Error('No API key found. Set users/{uid}/settings/agent_api_key in Firebase.');
-    const apiKey = keySnap.val();
-
     const { checkins, journals, tracker } = collectLast14Days();
 
     const systemPrompt = `You are a personal wellness coach for Sylvain. You know him well:
@@ -1876,25 +1871,16 @@ ${JSON.stringify(journals, null, 2)}
 TRACKER EVENTS:
 ${JSON.stringify(tracker, null, 2)}`;
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const FUNCTION_URL = 'https://weathered-mouse-4923.sylvainleblanc-work.workers.dev';
+    const resp = await fetch(FUNCTION_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-calls': 'true',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 600,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userMsg }],
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid: currentUID, systemPrompt, userMsg }),
     });
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error?.message || `API error ${resp.status}`);
+      throw new Error(err.error || `Function error ${resp.status}`);
     }
 
     const result = await resp.json();
