@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -330,7 +330,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   .journal-export-btn{width:100%;margin-top:8px}
 }
 
-/* CAT COLUMNS — polices réduites de 20% */
+/* CAT COLUMNS — fonts reduced 20% */
 .cat-col-name{font-size:13.4px;font-weight:600;color:var(--text2)}
 .cat-col-count{font-size:12.3px;color:var(--text3);margin-left:auto;font-family:'DM Mono',monospace}
 .task-mini-title{font-size:14px;color:var(--text);line-height:1.4;flex:1;word-break:break-word}
@@ -361,15 +361,54 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .btn-edit:hover{background:var(--blue);color:#fff}
 .btn-cancel-edit{padding:7px 16px;font-size:16.8px;font-weight:500;border-radius:7px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
 .btn-cancel-edit:hover{border-color:var(--text2);color:var(--text)}
+
+/* MODULE PICKER */
+.module-picker-overlay{display:none;position:fixed;inset:0;background:rgba(0,48,135,0.35);z-index:200;align-items:center;justify-content:center}
+.module-picker-overlay.open{display:flex}
+.module-picker-card{background:var(--surface);border-radius:16px;padding:28px;max-width:560px;width:90%;box-shadow:0 8px 40px rgba(0,48,135,0.18);max-height:80vh;overflow-y:auto}
+.module-picker-title{font-size:20px;font-weight:700;color:var(--blue-dark);margin-bottom:4px}
+.module-picker-sub{font-size:14px;color:var(--text3);margin-bottom:20px}
+.module-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.module-card{border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;gap:4px;position:relative}
+.module-card:hover{border-color:var(--blue);background:var(--blue-light)}
+.module-card.active{border-color:var(--blue-dark);background:var(--blue-light)}
+.module-card-icon{font-size:22px;margin-bottom:2px}
+.module-card-label{font-size:15px;font-weight:600;color:var(--text)}
+.module-card-desc{font-size:12px;color:var(--text3);line-height:1.4}
+.module-card-badge{margin-top:6px;display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.module-card.active .module-card-badge{background:var(--blue-dark);color:#fff}
+.module-card:not(.active) .module-card-badge{background:var(--blue);color:#fff}
+.module-picker-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1;padding:4px 8px;border-radius:6px}
+.module-picker-close:hover{color:var(--text);background:var(--surface2)}
+/* TAB ADD BUTTON */
+.tab-add{color:var(--blue)!important;border:1.5px dashed var(--blue-mid)!important;border-bottom:none!important;font-size:22px!important;font-weight:300!important;padding:4px 14px!important}
+.tab-add:hover{background:rgba(0,112,186,0.1)!important;border-color:var(--blue)!important;color:var(--blue-dark)!important}
+/* HOME PANEL */
+.home-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;text-align:center;gap:16px;min-height:400px}
+.home-empty-icon{font-size:56px}
+.home-empty-title{font-size:26px;font-weight:700;color:var(--blue-dark)}
+.home-empty-sub{font-size:16px;color:var(--text3);max-width:380px;line-height:1.7}
+.btn-add-module{padding:13px 32px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:17px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s}
+.btn-add-module:hover{background:var(--blue-dark)}
 </style>
 </head>
 <body>
+
+<!-- MODULE PICKER OVERLAY -->
+<div class="module-picker-overlay" id="module-picker-overlay" onclick="if(event.target===this)APP.hideModulePicker()">
+  <div class="module-picker-card">
+    <button class="module-picker-close" onclick="APP.hideModulePicker()">&#x2715;</button>
+    <div class="module-picker-title">Modules</div>
+    <div class="module-picker-sub">Add or remove sections from your personal suite.</div>
+    <div class="module-grid" id="module-picker-grid"></div>
+  </div>
+</div>
 
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">My<span>Tasks</span></div>
-    <div class="login-sub">Ton espace personnel pour tâches,<br>habitudes et journal.</div>
+    <div class="login-sub">Your personal space for tasks,<br>habits and journal.</div>
     <button class="btn-google" onclick="APP.loginGoogle()">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -377,9 +416,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
       </svg>
-      Continuer avec Google
+      Continue with Google
     </button>
-    <div class="login-note">Tes données sont privées et liées à ton compte Google.</div>
+    <div class="login-note">Your data is private and linked to your Google account.</div>
   </div>
 </div>
 
@@ -391,26 +430,28 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="app-logo">My<span>Tasks</span></div>
         <span class="sync-sep">·</span>
         <span class="sync-dot wait" id="sync-dot"></span>
-        <span class="sync-label" id="sync-label">Connexion...</span>
+        <span class="sync-label" id="sync-label">Connecting...</span>
       </div>
       <div class="user-area">
         <img class="user-avatar" id="user-avatar" src="" alt="">
         <span class="user-name" id="user-name"></span>
-        <button class="btn-logout" onclick="APP.logout()">Déconnexion</button>
+        <button class="btn-logout" onclick="APP.logout()">Sign out</button>
       </div>
     </div>
     <div class="ws-banner" id="ws-banner">
-      <div class="ws-title">Vie personnelle</div>
+      <div class="ws-title">Personal</div>
       <div class="tabs" id="tabs-row"></div>
     </div>
     <div class="panels">
-      <div class="panel active" id="panel-tasks"></div>
+      <div class="panel active" id="panel-home"></div>
+      <div class="panel" id="panel-tasks"></div>
       <div class="panel" id="panel-cats"></div>
+      <div class="panel" id="panel-checkin-daily"></div>
+      <div class="panel" id="panel-checkin-weekly"></div>
       <div class="panel" id="panel-journal"></div>
       <div class="panel" id="panel-tracker"></div>
       <div class="panel" id="panel-data"></div>
       <div class="panel" id="panel-history"></div>
-      <div class="panel" id="panel-checkin"></div>
     </div>
   </div>
 </div>
@@ -436,18 +477,29 @@ const auth = getAuth(firebaseApp);
 const provider = new GoogleAuthProvider();
 
 const JOURNAL_CATS = {
-  life:    { label: 'Life',    bg: '#E8F3FB', c: '#0060A0' },
-  finance: { label: 'Finance', bg: '#E8FDF2', c: '#1A7A48' },
-  lucie:   { label: 'Lucie',   bg: '#FDE8F3', c: '#A03070' },
-  medical: { label: 'Médical', bg: '#FDF4E3', c: '#9A6010' },
-  couple:  { label: 'Couple',  bg: '#FFE8ED', c: '#B02040' },
+  life:    { label: 'Life',     bg: '#E8F3FB', c: '#0060A0' },
+  finance: { label: 'Finance',  bg: '#E8FDF2', c: '#1A7A48' },
+  lucie:   { label: 'Lucie',    bg: '#FDE8F3', c: '#A03070' },
+  medical: { label: 'Medical',  bg: '#FDF4E3', c: '#9A6010' },
+  couple:  { label: 'Couple',   bg: '#FFE8ED', c: '#B02040' },
 };
+
+const MODULES = [
+  { id: 'tasks',           label: 'Task List',          desc: 'Add and manage your to-do items.',           icon: '✅' },
+  { id: 'cats',            label: 'Tasks by Category',  desc: 'View tasks organized by category.',          icon: '📂' },
+  { id: 'checkin-daily',   label: 'Daily Check-in',     desc: 'Track energy, thoughts & body daily.',       icon: '📅' },
+  { id: 'checkin-weekly',  label: 'Weekly Check-in',    desc: 'Track rest, weight & weekly stats.',         icon: '📋' },
+  { id: 'journal',         label: 'Journal',            desc: 'Write and browse your journal entries.',     icon: '📓' },
+  { id: 'tracker',         label: 'Tracker',            desc: 'Log habits and activities over time.',       icon: '🎯' },
+  { id: 'data',            label: 'Data',               desc: 'Weekly summary reports of all activity.',    icon: '📊' },
+  { id: 'history',         label: 'History',            desc: 'Browse your completed tasks.',               icon: '🕐' },
+];
 
 const WS = {
   vie: {
-    name: 'Vie personnelle',
+    name: 'Personal',
     cats: ['urgent','life','shopping','appointments','3d-print','reminders'],
-    labels: {urgent:'Urgent',life:'Life',shopping:'Shopping',appointments:'Rendez-vous','3d-print':'3D Print',reminders:'Reminders'},
+    labels: {urgent:'Urgent',life:'Life',shopping:'Shopping',appointments:'Appointments','3d-print':'3D Print',reminders:'Reminders'},
     dots: {urgent:'#E03030',life:'#D070A0',shopping:'#7050C8',appointments:'#2080D0','3d-print':'#D09040',reminders:'#20A880'},
     pills: {
       urgent:{bg:'#FDEAEA',c:'#C02020'},
@@ -461,7 +513,8 @@ const WS = {
   }
 };
 
-let ws = 'vie', activeTab = 'tasks', currentUID = null, dbListener = null;
+let ws = 'vie', activeTab = 'home', currentUID = null, dbListener = null;
+let userModules = null;
 let data = {vie:{tasks:{},history:{},journal:{},checkin:{},tracker:{},tracker_archives:{},tracker_q_archives:{},tracker_buttons:{},weekly_reports:{}}, _flags:{}};
 let selectedJournalKey = null;
 let journalFilter = 'all';
@@ -470,9 +523,9 @@ let editingJournalKey = null;
 function setSyncStatus(state) {
   const dot = document.getElementById('sync-dot');
   const lbl = document.getElementById('sync-label');
-  if(state==='ok'){dot.className='sync-dot';lbl.textContent='Synchronisé'}
-  else if(state==='off'){dot.className='sync-dot off';lbl.textContent='Hors ligne'}
-  else{dot.className='sync-dot wait';lbl.textContent='Connexion...'}
+  if(state==='ok'){dot.className='sync-dot';lbl.textContent='Synced'}
+  else if(state==='off'){dot.className='sync-dot off';lbl.textContent='Offline'}
+  else{dot.className='sync-dot wait';lbl.textContent='Connecting...'}
 }
 
 function cfg() { return WS[ws]; }
@@ -483,7 +536,7 @@ function objToArr(obj) {
 }
 function fmtDate(ts) {
   const d = new Date(ts);
-  return d.toLocaleDateString('fr-CA',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 }
 function fmtDur(ms) {
   const m = Math.round(ms/60000);
@@ -504,6 +557,47 @@ function userDataPath(subpath) {
   return ref(db, `users/${currentUID}/${subpath}`);
 }
 
+// ---- MODULE SYSTEM ----
+
+function showModulePicker() {
+  renderModulePicker();
+  document.getElementById('module-picker-overlay').classList.add('open');
+}
+
+function hideModulePicker() {
+  document.getElementById('module-picker-overlay').classList.remove('open');
+}
+
+function renderModulePicker() {
+  const mods = userModules || [];
+  document.getElementById('module-picker-grid').innerHTML = MODULES.map(m => {
+    const active = mods.includes(m.id);
+    return `<div class="module-card${active?' active':''}" onclick="APP.toggleModule('${m.id}')">
+      <div class="module-card-icon">${m.icon}</div>
+      <div class="module-card-label">${m.label}</div>
+      <div class="module-card-desc">${m.desc}</div>
+      <div class="module-card-badge">${active ? 'Remove' : 'Add'}</div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleModule(id) {
+  const mods = [...(userModules||[])];
+  const idx = mods.indexOf(id);
+  if(idx >= 0) mods.splice(idx, 1);
+  else mods.push(id);
+  userModules = mods;
+  await fbSet(ref(db, `users/${currentUID}/settings/modules`), mods.length ? mods : null);
+  renderModulePicker();
+  if(!mods.length) {
+    showTab('home');
+  } else if(activeTab === 'home' || !mods.includes(activeTab)) {
+    showTab(mods[0]);
+  } else {
+    renderTabs();
+  }
+}
+
 function startListening() {
   if(dbListener) dbListener();
   dbListener = onValue(ref(db,`users/${currentUID}`), (snapshot) => {
@@ -517,47 +611,65 @@ function startListening() {
       if(!data.vie.tracker_buttons) data.vie.tracker_buttons = {};
       if(!data.vie.weekly_reports) data.vie.weekly_reports = {};
       data._flags = val._flags||{};
+      const newMods = val.settings?.modules || null;
+      const hadModules = userModules !== null;
+      userModules = newMods;
+      if(!userModules || !userModules.length) {
+        activeTab = 'home';
+      } else if(!hadModules || activeTab === 'home' || !userModules.includes(activeTab)) {
+        activeTab = userModules[0];
+      }
     } else {
       data = {vie:{tasks:{},history:{},journal:{},checkin:{},tracker:{},tracker_archives:{},tracker_q_archives:{},tracker_buttons:{},weekly_reports:{}}};
       data._flags = {};
+      userModules = null;
+      activeTab = 'home';
     }
     setSyncStatus('ok');
     renderTabs();
     renderAll();
-    // Check if we need to auto-generate weekly report (Monday 4am logic)
     checkAutoWeeklyReport();
   }, () => setSyncStatus('off'));
 }
-
 
 function showTab(t) {
   activeTab = t;
   renderTabs();
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panel-'+t).classList.add('active');
+  const panel = document.getElementById('panel-'+t);
+  if(panel) panel.classList.add('active');
+  else document.getElementById('panel-home').classList.add('active');
   renderAll();
 }
 
 function renderTabs() {
+  const mods = userModules || [];
   const tasks = objToArr(wsd().tasks);
   const journal = objToArr(wsd().journal);
   const history = objToArr(wsd().history);
-  const checkin = objToArr(wsd().checkin||{});
-  const jLabel = cfg().journalLabel;
-  const tabs = [
-    {id:'tasks',label:'Tâches',badge:tasks.length},
-    {id:'cats',label:'Par catégorie',badge:tasks.length||null},
-    {id:'checkin',label:'Check-in',badge:checkin.length||null},
-    {id:'journal',label:jLabel,badge:journal.length},
-    {id:'tracker',label:'Tracker'},
-    {id:'data',label:'📊 Data'},
-    {id:'history',label:'Historique',badge:history.length}
-  ];
-  document.getElementById('tabs-row').innerHTML = tabs.map(t=>{
-    const b = t.badge!=null?`<span class="badge">${t.badge}</span>`:'';
-    return `<div class="tab${activeTab===t.id?' active':''}" onclick="APP.showTab('${t.id}')">${t.label}${b}</div>`;
+
+  const META = {
+    'tasks':          { label: 'Tasks',            badge: tasks.length },
+    'cats':           { label: 'By Category',       badge: null },
+    'checkin-daily':  { label: 'Daily Check-in',    badge: null },
+    'checkin-weekly': { label: 'Weekly Check-in',   badge: null },
+    'journal':        { label: 'Journal',           badge: journal.length },
+    'tracker':        { label: 'Tracker',           badge: null },
+    'data':           { label: 'Data',              badge: null },
+    'history':        { label: 'History',           badge: history.length },
+  };
+
+  const tabsHtml = mods.map(id => {
+    const m = META[id]; if(!m) return '';
+    const b = m.badge!=null ? `<span class="badge">${m.badge}</span>` : '';
+    return `<div class="tab${activeTab===id?' active':''}" onclick="APP.showTab('${id}')">${m.label}${b}</div>`;
   }).join('');
+
+  document.getElementById('tabs-row').innerHTML = tabsHtml +
+    `<div class="tab tab-add" onclick="APP.showModulePicker()" title="Add or remove modules">+</div>`;
 }
+
+// ---- CRUD ----
 
 async function addTask() {
   const inp = document.getElementById('task-input');
@@ -613,22 +725,36 @@ async function logout() {
   await signOut(auth);
 }
 
+// ---- RENDER HOME ----
+
+function renderHome() {
+  document.getElementById('panel-home').innerHTML = `
+    <div class="home-empty">
+      <div class="home-empty-icon">✨</div>
+      <div class="home-empty-title">Welcome to MyTasks</div>
+      <div class="home-empty-sub">Build your personal tracking suite by adding the modules you want.</div>
+      <button class="btn-add-module" onclick="APP.showModulePicker()">+ Add your first module</button>
+    </div>`;
+}
+
+// ---- RENDER TASKS ----
+
 function renderTasks() {
   const el = document.getElementById('panel-tasks');
   const tasks = objToArr(wsd().tasks);
   const cats = cfg().cats;
   const catOptions = cats.map(c=>`<option value="${c}">${cfg().labels[c]}</option>`).join('');
   let html = `<div class="entry-box">
-    <div class="entry-title-row"><input type="text" id="task-input" placeholder="Nouvelle tâche..." onkeydown="if(event.key==='Enter')APP.addTask()"></div>
+    <div class="entry-title-row"><input type="text" id="task-input" placeholder="New task..." onkeydown="if(event.key==='Enter')APP.addTask()"></div>
     <div class="entry-bottom-row">
-      <textarea id="task-note" placeholder="Note ou description (optionnel)..."></textarea>
+      <textarea id="task-note" placeholder="Note or description (optional)..."></textarea>
       <div class="entry-side">
         <select id="cat-sel" class="cat-sel">${catOptions}</select>
-        <button class="btn-add" onclick="APP.addTask()">+ Ajouter</button>
+        <button class="btn-add" onclick="APP.addTask()">+ Add</button>
       </div>
     </div>
   </div>`;
-  if(!tasks.length){html+='<div class="empty">Aucune tâche active</div>';el.innerHTML=html;return;}
+  if(!tasks.length){html+='<div class="empty">No active tasks</div>';el.innerHTML=html;return;}
   html += tasks.map(t=>`
     <div class="task-item">
       <div class="chk" onclick="APP.completeTask('${t.fbKey}',${t.createdAt})"></div>
@@ -641,6 +767,8 @@ function renderTasks() {
     </div>`).join('');
   el.innerHTML = html;
 }
+
+// ---- RENDER CATS ----
 
 function renderCats() {
   const el = document.getElementById('panel-cats');
@@ -657,7 +785,7 @@ function renderCats() {
         <span class="cat-col-count">${items.length}</span>
       </div>
       <div class="cat-col-body">`;
-    if(!items.length){html+='<div class="col-empty">Vide</div>';}
+    if(!items.length){html+='<div class="col-empty">Empty</div>';}
     else{html+=items.map(t=>`
       <div class="task-mini">
         <div class="task-mini-top">
@@ -674,6 +802,8 @@ function renderCats() {
   el.innerHTML = html;
 }
 
+// ---- RENDER JOURNAL ----
+
 function renderJournal() {
   const el = document.getElementById('panel-journal');
   const allEntries = objToArr(wsd().journal);
@@ -689,23 +819,21 @@ function renderJournal() {
   function entryDateFmt(j) {
     const iso = entryDateISO(j);
     const d = new Date(iso + 'T12:00:00');
-    return d.toLocaleDateString('fr-CA', {weekday:'short', year:'numeric', month:'short', day:'numeric'});
+    return d.toLocaleDateString('en-US', {weekday:'short', year:'numeric', month:'short', day:'numeric'});
   }
 
   const filteredEntries = journalFilter === 'all'
     ? allEntries
     : allEntries.filter(j => (j.cat||'life') === journalFilter);
 
-  // Filter bar
   const filterBar = `<div class="journal-filter-bar">
-    <button class="journal-filter-btn${journalFilter==='all'?' active':''}" onclick="APP.setJournalFilter('all')">Toutes (${allEntries.length})</button>
+    <button class="journal-filter-btn${journalFilter==='all'?' active':''}" onclick="APP.setJournalFilter('all')">All (${allEntries.length})</button>
     ${Object.entries(JOURNAL_CATS).map(([k,v])=>{
       const n = allEntries.filter(j=>(j.cat||'life')===k).length;
-      return `<button class="journal-filter-btn${journalFilter===k?' active':''}" onclick="APP.setJournalFilter('${k}')" style="${journalFilter===k?'':`border-color:${v.bg}`}">${v.label} (${n})</button>`;
+      return `<button class="journal-filter-btn${journalFilter===k?' active':''}" onclick="APP.setJournalFilter('${k}')">${v.label} (${n})</button>`;
     }).join('')}
   </div>`;
 
-  // Sidebar
   const sidebarHtml = filteredEntries.map(j=>`
     <div class="journal-sidebar-item${selectedJournalKey===j.fbKey?' selected':''}" onclick="APP.selectJournal('${j.fbKey}')">
       <div class="journal-sidebar-date">${entryDateFmt(j)}</div>
@@ -713,7 +841,6 @@ function renderJournal() {
       <div class="journal-sidebar-preview">${j.text.replace(/</g,'&lt;').substring(0,55)}</div>
     </div>`).join('');
 
-  // Reader / edit
   const selected = allEntries.find(j => j.fbKey === selectedJournalKey);
   let readerHtml = '';
   if(selected) {
@@ -729,8 +856,8 @@ function renderJournal() {
         </div>
         <textarea id="journal-edit-ta" class="journal-edit-ta">${safeText}</textarea>
         <div class="journal-edit-actions">
-          <button class="btn-cancel-edit" onclick="APP.cancelEditJournal()">Annuler</button>
-          <button class="btn-save" onclick="APP.saveJournalEdit()">💾 Sauvegarder</button>
+          <button class="btn-cancel-edit" onclick="APP.cancelEditJournal()">Cancel</button>
+          <button class="btn-save" onclick="APP.saveJournalEdit()">💾 Save</button>
         </div>
       </div>`;
     } else {
@@ -741,14 +868,13 @@ function renderJournal() {
         </div>
         <div class="journal-reader-text">${selected.text.replace(/</g,'&lt;')}</div>
         <div class="journal-item-actions" style="margin-top:14px;gap:8px">
-          <button class="btn-edit" onclick="APP.startEditJournal('${selected.fbKey}')">✏️ Modifier</button>
-          <button class="btn-tiny" onclick="APP.deleteJournal('${selected.fbKey}')">Supprimer</button>
+          <button class="btn-edit" onclick="APP.startEditJournal('${selected.fbKey}')">✏️ Edit</button>
+          <button class="btn-tiny" onclick="APP.deleteJournal('${selected.fbKey}')">Delete</button>
         </div>
       </div>`;
     }
   }
 
-  // New entry form
   const catOpts = Object.entries(JOURNAL_CATS).map(([k,v])=>
     `<option value="${k}">${v.label}</option>`).join('');
 
@@ -759,24 +885,61 @@ function renderJournal() {
           <input type="date" id="journal-date" class="journal-edit-date" value="${todayISO}">
           <select id="journal-cat" class="journal-edit-cat">${catOpts}</select>
         </div>
-        <textarea id="journal-ta" placeholder="Écris ici... pensées, réflexions du jour." onkeydown="if(event.ctrlKey&&event.key==='Enter')APP.saveJournal()" style="width:100%;font-size:19.6px;padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;resize:none;height:120px;line-height:1.7;transition:border-color 0.15s;box-sizing:border-box"></textarea>
+        <textarea id="journal-ta" placeholder="Write here... thoughts, reflections." onkeydown="if(event.ctrlKey&&event.key==='Enter')APP.saveJournal()" style="width:100%;font-size:19.6px;padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;resize:none;height:120px;line-height:1.7;transition:border-color 0.15s;box-sizing:border-box"></textarea>
         <div class="journal-footer">
-          <span class="journal-date-lbl">Ctrl+Enter pour sauvegarder</span>
-          <button class="btn-save" onclick="APP.saveJournal()">Sauvegarder</button>
+          <span class="journal-date-lbl">Ctrl+Enter to save</span>
+          <button class="btn-save" onclick="APP.saveJournal()">Save</button>
         </div>
       </div>
       ${filterBar}
       ${readerHtml}
-      ${!filteredEntries.length ? `<div class="empty">${journalFilter==='all'?'Aucune entrée pour l\'instant':'Aucune entrée dans cette catégorie'}</div>` : ''}
+      ${!filteredEntries.length ? `<div class="empty">${journalFilter==='all'?'No entries yet':'No entries in this category'}</div>` : ''}
     </div>
     <div class="journal-sidebar">
-      <div class="journal-sidebar-title">Mes entrées</div>
+      <div class="journal-sidebar-title">My Entries</div>
       ${sidebarHtml}
       ${allEntries.length ? `<button class="journal-export-btn" onclick="APP.exportJournalCSV()">⬇ Export CSV</button>` : ''}
     </div>
   </div>`;
   el.innerHTML = html;
 }
+
+function selectJournal(fbKey) {
+  if(selectedJournalKey === fbKey) { selectedJournalKey = null; editingJournalKey = null; }
+  else { selectedJournalKey = fbKey; editingJournalKey = null; }
+  renderJournal();
+}
+function setJournalFilter(cat) { journalFilter = cat; renderJournal(); }
+function startEditJournal(fbKey) { editingJournalKey = fbKey; renderJournal(); }
+function cancelEditJournal() { editingJournalKey = null; renderJournal(); }
+
+async function saveJournalEdit() {
+  const ta = document.getElementById('journal-edit-ta');
+  const catEl = document.getElementById('journal-edit-cat');
+  const dateEl = document.getElementById('journal-edit-date');
+  const text = ta?.value.trim();
+  if(!text) return;
+  const cat = catEl?.value || 'life';
+  const entryDate = dateEl?.value || new Date().toISOString().split('T')[0];
+  const entry = objToArr(wsd().journal).find(j => j.fbKey === editingJournalKey);
+  if(!entry) return;
+  setSyncStatus('wait');
+  await fbSet(ref(db, `users/${currentUID}/${ws}/journal/${editingJournalKey}`), {text, createdAt: entry.createdAt, cat, entryDate});
+  editingJournalKey = null;
+}
+
+function exportJournalCSV() {
+  const entries = objToArr(wsd().journal);
+  if(!entries.length) return;
+  const rows = [['Date','Category','Text']];
+  entries.forEach(j=>{
+    const d = j.entryDate || new Date(j.createdAt).toLocaleDateString('en-US');
+    const cat = JOURNAL_CATS[j.cat||'life']?.label || 'Life';
+    rows.push([d, cat, '"'+j.text.replace(/"/g,'""')+'"']);
+  });
+  downloadCSV(rows, 'journal.csv');
+}
+// ---- RENDER HISTORY ----
 
 function renderHistory() {
   const el = document.getElementById('panel-history');
@@ -785,11 +948,11 @@ function renderHistory() {
   const todayN = hist.filter(h=>new Date(h.completedAt).toDateString()===today).length;
   const avg = hist.length ? hist.reduce((s,h)=>s+h.duration,0)/hist.length : null;
   let html = `<div class="stats-grid">
-    <div class="stat-card"><div class="stat-val">${hist.length}</div><div class="stat-lbl">Total complétées</div></div>
-    <div class="stat-card"><div class="stat-val">${todayN}</div><div class="stat-lbl">Aujourd'hui</div></div>
-    <div class="stat-card"><div class="stat-val">${avg!==null?fmtDur(avg):'—'}</div><div class="stat-lbl">Durée moyenne</div></div>
+    <div class="stat-card"><div class="stat-val">${hist.length}</div><div class="stat-lbl">Total completed</div></div>
+    <div class="stat-card"><div class="stat-val">${todayN}</div><div class="stat-lbl">Today</div></div>
+    <div class="stat-card"><div class="stat-val">${avg!==null?fmtDur(avg):'—'}</div><div class="stat-lbl">Average duration</div></div>
   </div>`;
-  if(!hist.length){html+='<div class="empty">Aucune tâche complétée</div>';el.innerHTML=html;return;}
+  if(!hist.length){html+='<div class="empty">No completed tasks</div>';el.innerHTML=html;return;}
   html += `<div class="ci-export-row"><button class="btn-export-sm" onclick="APP.exportHistoryCSV()">⬇ Export CSV</button></div>`;
   html += hist.map(h=>`
     <div class="hist-item">
@@ -798,88 +961,104 @@ function renderHistory() {
         ${h.note?`<div class="hist-note">${h.note}</div>`:''}
         <div class="hist-meta">${pill(h.cat)}<span class="dur-pill">${fmtDur(h.duration)}</span><span class="hist-ts">${fmtDate(h.createdAt)} → ${fmtDate(h.completedAt)}</span></div>
       </div>
-      <button class="hist-del-btn" onclick="APP.deleteHistory('${h.fbKey}')" title="Supprimer">✕</button>
+      <button class="hist-del-btn" onclick="APP.deleteHistory('${h.fbKey}')" title="Delete">✕</button>
     </div>`).join('');
   el.innerHTML = html;
 }
 
-let ciSubTab = 'saisie';
-
-function ciColor(val) {
-  if(val==null) return '';
-  if(val>=7) return 'ci-good';
-  if(val>=5) return 'ci-ok';
-  return 'ci-low';
+async function deleteHistory(fbKey) {
+  setSyncStatus('wait');
+  await remove(ref(db,`users/${currentUID}/${ws}/history/${fbKey}`));
 }
 
-function renderCheckin() {
-  const el = document.getElementById('panel-checkin');
+function exportHistoryCSV() {
+  const hist = objToArr(wsd().history);
+  if(!hist.length){ alert('No history to export.'); return; }
+  const rows = [['Task','Note','Category','Created','Completed','Duration (min)']];
+  hist.forEach(h=>{
+    const cat = cfg().labels[h.cat]||h.cat;
+    const created = new Date(h.createdAt).toLocaleDateString('en-US');
+    const completed = new Date(h.completedAt).toLocaleDateString('en-US');
+    const dur = Math.round(h.duration/60000);
+    rows.push([`"${(h.title||'').replace(/"/g,'""')}"`,`"${(h.note||'').replace(/"/g,'""')}"`,cat,created,completed,dur]);
+  });
+  downloadCSV(rows, 'history.csv');
+}
+
+// ---- DAILY CHECK-IN ----
+
+function renderCheckinDaily() {
+  const el = document.getElementById('panel-checkin-daily');
   const allEntries = objToArr(wsd().checkin||{}).sort((a,b)=>b.createdAt-a.createdAt);
   const daily = allEntries.filter(e=>!e.weekly);
-  const weekly = allEntries.filter(e=>e.weekly);
-  const hasData = allEntries.length > 0;
-
-  const subtabs = [
-    {id:'saisie',label:'📝 Saisie'},
-    {id:'journal',label:'📅 Journal quotidien'},
-    {id:'hebdo',label:'📋 Hebdomadaire'},
-    {id:'stats',label:'📊 Statistiques'},
-  ];
-
-  let html = `<div class="ci-subtabs">${subtabs.map(t=>`
-    <div class="ci-subtab${ciSubTab===t.id?' active':''}" onclick="APP.setCiTab('${t.id}')">${t.label}</div>`).join('')}</div>`;
-
-  // ---- SAISIE ----
   const todayISO = localDateISO();
-  html += `<div class="ci-subpanel${ciSubTab==='saisie'?' active':''}">
-    <div class="checkin-form-grid">
-      <div class="checkin-card">
-        <div class="checkin-card-title">📅 Check-in quotidien</div>
-        <div class="ci-field"><label>📆 Date</label><input type="date" id="ci-date-daily" value="${todayISO}"></div>
-        <div class="ci-field"><label>⚡ Énergie /10</label><input type="number" id="ci-energie" min="0" max="10" step="0.5" placeholder="ex: 6.5"><div class="ci-hint">Ton niveau d'énergie général</div></div>
-        <div class="ci-field"><label>🧠 Pensées intenses /10</label><input type="number" id="ci-pensees" min="0" max="10" step="0.5" placeholder="ex: 7"><div class="ci-hint">Intensité des pensées / rumination</div></div>
-        <div class="ci-field"><label>💪 Corps / Bouffe /10</label><input type="number" id="ci-corps" min="0" max="10" step="0.5" placeholder="ex: 5"><div class="ci-hint">Comment tu te sens physiquement + alimentation</div></div>
-        <button class="btn-checkin-save" onclick="APP.saveCheckin(false)">💾 Sauvegarder le jour</button>
-      </div>
-      <div class="checkin-card">
-        <div class="checkin-card-title">📋 Check-in hebdomadaire</div>
-        <div class="ci-field"><label>📆 Date (début de semaine)</label><input type="date" id="ci-date-weekly" value="${todayISO}"></div>
-        <div class="ci-field"><label>😴 Repos / Sommeil /10</label><input type="number" id="ci-repos" min="0" max="10" step="0.5" placeholder="ex: 7"></div>
-        <div class="ci-field"><label>❤️ Couple /10</label><input type="number" id="ci-couple" min="0" max="10" step="0.5" placeholder="ex: 8"></div>
-        <div class="ci-field"><label>⚖️ Poids (lbs)</label><input type="number" id="ci-poids" min="100" max="400" step="0.1" placeholder="ex: 258.5"></div>
-        <button class="btn-checkin-save weekly" onclick="APP.saveCheckin(true)">💾 Sauvegarder la semaine</button>
-      </div>
-    </div>
-  </div>`;
 
-  // ---- JOURNAL QUOTIDIEN ----
-  function scoreColor(v){ return v==null?'—':`<span class="${ciColor(v)}">${v}</span>`; }
+  function scoreColor(v){ if(v==null) return ''; if(v>=7) return 'ci-good'; if(v>=5) return 'ci-ok'; return 'ci-low'; }
+
   const dailyRows = daily.map(e=>{
     const d = new Date(e.createdAt);
-    const dStr = d.toLocaleDateString('fr-CA',{weekday:'short',month:'short',day:'numeric'});
+    const dStr = d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
     const note = e.energie!=null&&e.pensees!=null&&e.corps!=null ? Math.round(((+e.energie + +e.pensees + +e.corps)/3)*100)/100 : null;
     return `<tr>
       <td>${dStr}</td>
-      <td class="ci-num ${ciColor(e.energie)}">${e.energie??'—'}</td>
-      <td class="ci-num ${ciColor(e.pensees)}">${e.pensees??'—'}</td>
-      <td class="ci-num ${ciColor(e.corps)}">${e.corps??'—'}</td>
-      <td class="ci-num ${ciColor(note)}">${note??'—'}</td>
-      <td><button class="ci-del-btn" onclick="APP.deleteCheckin('${e.fbKey}')" title="Supprimer">✕</button></td>
+      <td class="ci-num ${scoreColor(e.energie)}">${e.energie??'—'}</td>
+      <td class="ci-num ${scoreColor(e.pensees)}">${e.pensees??'—'}</td>
+      <td class="ci-num ${scoreColor(e.corps)}">${e.corps??'—'}</td>
+      <td class="ci-num ${scoreColor(note)}">${note??'—'}</td>
+      <td><button class="ci-del-btn" onclick="APP.deleteCheckin('${e.fbKey}')" title="Delete">✕</button></td>
     </tr>`;
   }).join('');
 
-  html += `<div class="ci-subpanel${ciSubTab==='journal'?' active':''}">
-    <div class="ci-export-row"><button class="btn-export-sm" onclick="APP.exportCheckinCSV('daily')">⬇ Export CSV</button></div>
-    <div class="checkin-table-wrap"><table class="checkin-table">
-      <thead><tr><th>Date</th><th>⚡ Énergie</th><th>🧠 Pensées</th><th>💪 Corps</th><th>📝 Note moy.</th><th></th></tr></thead>
-      <tbody>${daily.length?dailyRows:'<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px">Aucune entrée</td></tr>'}</tbody>
-    </table></div>
-  </div>`;
+  // Last 7 trend
+  const last7 = daily.slice(0,7).reverse();
+  const trendRows = last7.map(e=>{
+    const note = e.energie!=null&&e.pensees!=null&&e.corps!=null ? Math.round(((+e.energie + +e.pensees + +e.corps)/3)*100)/100 : null;
+    const d = new Date(e.createdAt).toLocaleDateString('en-US',{weekday:'short',day:'numeric'});
+    return `<tr><td>${d}</td><td class="ci-num ${scoreColor(e.energie)}">${e.energie??'—'}</td><td class="ci-num ${scoreColor(e.pensees)}">${e.pensees??'—'}</td><td class="ci-num ${scoreColor(e.corps)}">${e.corps??'—'}</td><td class="ci-num ${scoreColor(note)}">${note??'—'}</td></tr>`;
+  }).join('');
 
-  // ---- HEBDOMADAIRE ----
+  el.innerHTML = `
+    <div class="checkin-form-grid" style="grid-template-columns:1fr">
+      <div class="checkin-card">
+        <div class="checkin-card-title">📅 Daily Check-in</div>
+        <div class="ci-field"><label>📆 Date</label><input type="date" id="ci-date-daily" value="${todayISO}"></div>
+        <div class="ci-field"><label>⚡ Energy /10</label><input type="number" id="ci-energie" min="0" max="10" step="0.5" placeholder="e.g. 6.5"><div class="ci-hint">Your general energy level</div></div>
+        <div class="ci-field"><label>🧠 Intense thoughts /10</label><input type="number" id="ci-pensees" min="0" max="10" step="0.5" placeholder="e.g. 7"><div class="ci-hint">Intensity of thoughts / rumination</div></div>
+        <div class="ci-field"><label>💪 Body / Food /10</label><input type="number" id="ci-corps" min="0" max="10" step="0.5" placeholder="e.g. 5"><div class="ci-hint">How you feel physically + eating</div></div>
+        <button class="btn-checkin-save" onclick="APP.saveCheckin(false)">💾 Save day</button>
+      </div>
+    </div>
+    <div style="margin-top:20px">
+      <div class="stat-section-title">Last 7 days</div>
+      <div class="checkin-table-wrap"><table class="checkin-table">
+        <thead><tr><th>Date</th><th>⚡ Energy</th><th>🧠 Thoughts</th><th>💪 Body</th><th>📝 Avg</th></tr></thead>
+        <tbody>${last7.length?trendRows:'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px">No data yet</td></tr>'}</tbody>
+      </table></div>
+    </div>
+    <div style="margin-top:20px">
+      <div class="ci-export-row"><button class="btn-export-sm" onclick="APP.exportCheckinCSV('daily')">⬇ Export CSV</button></div>
+      <div class="checkin-table-wrap"><table class="checkin-table">
+        <thead><tr><th>Date</th><th>⚡ Energy</th><th>🧠 Thoughts</th><th>💪 Body</th><th>📝 Avg</th><th></th></tr></thead>
+        <tbody>${daily.length?dailyRows:'<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px">No entries</td></tr>'}</tbody>
+      </table></div>
+    </div>`;
+}
+
+// ---- WEEKLY CHECK-IN ----
+
+function renderCheckinWeekly() {
+  const el = document.getElementById('panel-checkin-weekly');
+  const allEntries = objToArr(wsd().checkin||{}).sort((a,b)=>b.createdAt-a.createdAt);
+  const daily = allEntries.filter(e=>!e.weekly);
+  const weekly = allEntries.filter(e=>e.weekly);
+  const todayISO = localDateISO();
+
+  function scoreColor(v){ if(v==null) return ''; if(v>=7) return 'ci-good'; if(v>=5) return 'ci-ok'; return 'ci-low'; }
+  const avgOf = (arr,key) => { const v=arr.filter(e=>e[key]!=null); return v.length?Math.round(v.reduce((s,e)=>s+(+e[key]),0)/v.length*100)/100:null; };
+
   const weeklyRows = weekly.map(e=>{
     const d = new Date(e.createdAt);
-    const dStr = d.toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+    const dStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
     const wStart = new Date(e.createdAt); wStart.setHours(0,0,0,0);
     const wEnd = new Date(wStart); wEnd.setDate(wStart.getDate()+7);
     const weekDailies = daily.filter(de=>{const t=de.createdAt;return t>=wStart.getTime()&&t<wEnd.getTime();});
@@ -888,26 +1067,17 @@ function renderCheckin() {
     const avgC = weekDailies.length ? Math.round(weekDailies.reduce((s,d)=>s+(+d.corps||0),0)/weekDailies.length*100)/100 : null;
     return `<tr>
       <td>${dStr}</td>
-      <td class="ci-num ${ciColor(avgE)}">${avgE??'—'}</td>
-      <td class="ci-num ${ciColor(avgP)}">${avgP??'—'}</td>
-      <td class="ci-num ${ciColor(e.repos)}">${e.repos??'—'}</td>
-      <td class="ci-num ${ciColor(avgC)}">${avgC??'—'}</td>
-      <td class="ci-num ${ciColor(e.couple)}">${e.couple??'—'}</td>
+      <td class="ci-num ${scoreColor(avgE)}">${avgE??'—'}</td>
+      <td class="ci-num ${scoreColor(avgP)}">${avgP??'—'}</td>
+      <td class="ci-num ${scoreColor(e.repos)}">${e.repos??'—'}</td>
+      <td class="ci-num ${scoreColor(avgC)}">${avgC??'—'}</td>
+      <td class="ci-num ${scoreColor(e.couple)}">${e.couple??'—'}</td>
       <td class="ci-num">${e.poids!=null?e.poids+' lbs':'—'}</td>
-      <td><button class="ci-del-btn" onclick="APP.deleteCheckin('${e.fbKey}')" title="Supprimer">✕</button></td>
+      <td><button class="ci-del-btn" onclick="APP.deleteCheckin('${e.fbKey}')" title="Delete">✕</button></td>
     </tr>`;
   }).join('');
 
-  html += `<div class="ci-subpanel${ciSubTab==='hebdo'?' active':''}">
-    <div class="ci-export-row"><button class="btn-export-sm" onclick="APP.exportCheckinCSV('weekly')">⬇ Export CSV</button></div>
-    <div class="checkin-table-wrap"><table class="checkin-table">
-      <thead><tr><th>Semaine</th><th>⚡ Énergie moy.</th><th>🧠 Pensées moy.</th><th>😴 Repos</th><th>💪 Corps moy.</th><th>❤️ Couple</th><th>⚖️ Poids</th><th></th></tr></thead>
-      <tbody>${weekly.length?weeklyRows:'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:24px">Aucune entrée hebdo</td></tr>'}</tbody>
-    </table></div>
-  </div>`;
-
-  // ---- STATS ----
-  const avgOf = (arr,key) => { const v=arr.filter(e=>e[key]!=null); return v.length?Math.round(v.reduce((s,e)=>s+(+e[key]),0)/v.length*100)/100:null; };
+  // Stats
   const avgEnergie = avgOf(daily,'energie');
   const avgPensees = avgOf(daily,'pensees');
   const avgCorps   = avgOf(daily,'corps');
@@ -922,47 +1092,44 @@ function renderCheckin() {
   function statCard(val,lbl,suffix=''){
     const pct = suffix===''&&val!=null ? (val/10)*100 : 50;
     return `<div class="stat-card-sm">
-      <div class="stat-val-sm ${val!=null?ciColor(val):''}">${val!=null?val+(suffix):'—'}</div>
+      <div class="stat-val-sm ${val!=null?scoreColor(val):''}">${val!=null?val+suffix:'—'}</div>
       <div class="stat-lbl-sm">${lbl}</div>
       ${suffix===''&&val!=null?`<div class="trend-bar-wrap"><div class="trend-bar" style="width:${pct}%"></div></div>`:''}
     </div>`;
   }
 
-  // Last 7 daily entries trend
-  const last7 = daily.slice(0,7).reverse();
-  const trendRows = last7.map(e=>{
-    const note = e.energie!=null&&e.pensees!=null&&e.corps!=null ? Math.round(((+e.energie + +e.pensees + +e.corps)/3)*100)/100 : null;
-    const d = new Date(e.createdAt).toLocaleDateString('fr-CA',{weekday:'short',day:'numeric'});
-    return `<tr><td>${d}</td><td class="ci-num ${ciColor(e.energie)}">${e.energie??'—'}</td><td class="ci-num ${ciColor(e.pensees)}">${e.pensees??'—'}</td><td class="ci-num ${ciColor(e.corps)}">${e.corps??'—'}</td><td class="ci-num ${ciColor(note)}">${note??'—'}</td></tr>`;
-  }).join('');
-
-  html += `<div class="ci-subpanel${ciSubTab==='stats'?' active':''}">
-    <div class="stat-section">
-      <div class="stat-section-title">Moyennes globales (toutes entrées)</div>
-      <div class="stats-grid-2">
-        ${statCard(globalScore,'🏆 Score global')}
-        ${statCard(avgEnergie,'⚡ Énergie moy.')}
-        ${statCard(avgPensees,'🧠 Pensées moy.')}
-        ${statCard(avgCorps,'💪 Corps moy.')}
-        ${statCard(avgRepos,'😴 Repos moy.')}
-        ${statCard(avgCouple,'❤️ Couple moy.')}
-        ${statCard(poidsStart!=null&&poidsCur!=null?poidsCur:null,'⚖️ Poids actuel',' lbs')}
-        ${statCard(poidsDelta!=null?(poidsDelta>0?'+'+poidsDelta:poidsDelta):null,'📉 Variation poids',' lbs')}
+  el.innerHTML = `
+    <div class="checkin-form-grid" style="grid-template-columns:1fr">
+      <div class="checkin-card">
+        <div class="checkin-card-title">📋 Weekly Check-in</div>
+        <div class="ci-field"><label>📆 Date (start of week)</label><input type="date" id="ci-date-weekly" value="${todayISO}"></div>
+        <div class="ci-field"><label>😴 Rest / Sleep /10</label><input type="number" id="ci-repos" min="0" max="10" step="0.5" placeholder="e.g. 7"></div>
+        <div class="ci-field"><label>❤️ Relationship /10</label><input type="number" id="ci-couple" min="0" max="10" step="0.5" placeholder="e.g. 8"></div>
+        <div class="ci-field"><label>⚖️ Weight (lbs)</label><input type="number" id="ci-poids" min="100" max="400" step="0.1" placeholder="e.g. 258.5"></div>
+        <button class="btn-checkin-save weekly" onclick="APP.saveCheckin(true)">💾 Save week</button>
       </div>
     </div>
-    <div class="stat-section">
-      <div class="stat-section-title">7 derniers jours</div>
-      <div class="checkin-table-wrap"><table class="checkin-table">
-        <thead><tr><th>Date</th><th>⚡ Énergie</th><th>🧠 Pensées</th><th>💪 Corps</th><th>📝 Note</th></tr></thead>
-        <tbody>${last7.length?trendRows:'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px">Pas encore de données</td></tr>'}</tbody>
-      </table></div>
+    <div style="margin-top:20px">
+      <div class="stat-section-title">Overall averages</div>
+      <div class="stats-grid-2">
+        ${statCard(globalScore,'🏆 Global score')}
+        ${statCard(avgEnergie,'⚡ Avg energy')}
+        ${statCard(avgPensees,'🧠 Avg thoughts')}
+        ${statCard(avgCorps,'💪 Avg body')}
+        ${statCard(avgRepos,'😴 Avg rest')}
+        ${statCard(avgCouple,'❤️ Avg relationship')}
+        ${statCard(poidsCur,'⚖️ Current weight',' lbs')}
+        ${statCard(poidsDelta!=null?(poidsDelta>0?'+'+poidsDelta:poidsDelta):null,'📉 Weight change',' lbs')}
+      </div>
     </div>
-  </div>`;
-
-  el.innerHTML = html;
+    <div style="margin-top:20px">
+      <div class="ci-export-row"><button class="btn-export-sm" onclick="APP.exportCheckinCSV('weekly')">⬇ Export CSV</button></div>
+      <div class="checkin-table-wrap"><table class="checkin-table">
+        <thead><tr><th>Week</th><th>⚡ Avg energy</th><th>🧠 Avg thoughts</th><th>😴 Rest</th><th>💪 Avg body</th><th>❤️ Relationship</th><th>⚖️ Weight</th><th></th></tr></thead>
+        <tbody>${weekly.length?weeklyRows:'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:24px">No weekly entries</td></tr>'}</tbody>
+      </table></div>
+    </div>`;
 }
-
-function setCiTab(t) { ciSubTab = t; renderCheckin(); }
 
 async function saveCheckin(isWeekly) {
   const getVal = id => { const el=document.getElementById(id); if(!el||el.value==='') return null; return parseFloat(el.value); };
@@ -975,22 +1142,16 @@ async function saveCheckin(isWeekly) {
     entry.energie = getVal('ci-energie');
     entry.pensees  = getVal('ci-pensees');
     entry.corps    = getVal('ci-corps');
-    if(entry.energie==null&&entry.pensees==null&&entry.corps==null){ alert('Entre au moins une valeur.'); return; }
+    if(entry.energie==null&&entry.pensees==null&&entry.corps==null){ alert('Enter at least one value.'); return; }
   } else {
     entry.repos  = getVal('ci-repos');
     entry.couple = getVal('ci-couple');
     entry.poids  = getVal('ci-poids');
-    if(entry.repos==null&&entry.couple==null&&entry.poids==null){ alert('Entre au moins une valeur.'); return; }
-
-    // Daily entries in the 7-day window ending on the selected date (selected day inclusive)
-    const dayStart = ts - 12 * 3600000; // midnight of selected day (ts is noon)
+    if(entry.repos==null&&entry.couple==null&&entry.poids==null){ alert('Enter at least one value.'); return; }
+    const dayStart = ts - 12 * 3600000;
     const allDaily = objToArr(wsd().checkin||{})
       .filter(e=>!e.weekly && e.createdAt >= dayStart - 6*86400000 && e.createdAt < dayStart + 86400000);
-
-    const avg = key => {
-      const vals = allDaily.filter(e=>e[key]!=null);
-      return vals.length ? Math.round(vals.reduce((s,e)=>s+(+e[key]),0)/vals.length*100)/100 : null;
-    };
+    const avg = key => { const vals = allDaily.filter(e=>e[key]!=null); return vals.length ? Math.round(vals.reduce((s,e)=>s+(+e[key]),0)/vals.length*100)/100 : null; };
     entry.energie = avg('energie');
     entry.pensees  = avg('pensees');
     entry.corps    = avg('corps');
@@ -1009,122 +1170,49 @@ async function deleteCheckin(fbKey) {
 function exportCheckinCSV(type) {
   const allEntries = objToArr(wsd().checkin||{}).sort((a,b)=>b.createdAt-a.createdAt);
   const entries = type==='weekly' ? allEntries.filter(e=>e.weekly) : allEntries.filter(e=>!e.weekly);
-  if(!entries.length){ alert('Aucune donnée à exporter.'); return; }
+  if(!entries.length){ alert('No data to export.'); return; }
   let rows, filename;
   if(type==='daily') {
-    rows = [['Date','Énergie','Pensées intenses','Corps / Bouffe','Note moyenne']];
+    rows = [['Date','Energy','Intense Thoughts','Body / Food','Average']];
     entries.forEach(e=>{
-      const d = new Date(e.createdAt).toLocaleDateString('fr-CA');
+      const d = new Date(e.createdAt).toLocaleDateString('en-US');
       const note = e.energie!=null&&e.pensees!=null&&e.corps!=null ? Math.round(((+e.energie + +e.pensees + +e.corps)/3)*100)/100 : '';
       rows.push([d,e.energie??'',e.pensees??'',e.corps??'',note]);
     });
-    filename = 'checkin-quotidien.csv';
+    filename = 'checkin-daily.csv';
   } else {
-    rows = [['Date semaine','Énergie moy.','Pensées moy.','Repos','Corps moy.','Couple','Poids (lbs)']];
+    rows = [['Week','Avg Energy','Avg Thoughts','Rest','Avg Body','Relationship','Weight (lbs)']];
     entries.forEach(e=>{
-      const d = new Date(e.createdAt).toLocaleDateString('fr-CA');
+      const d = new Date(e.createdAt).toLocaleDateString('en-US');
       rows.push([d,e.energie??'',e.pensees??'',e.repos??'',e.corps??'',e.couple??'',e.poids??'']);
     });
-    filename = 'checkin-hebdomadaire.csv';
+    filename = 'checkin-weekly.csv';
   }
-  const csv = rows.map(r=>r.join(',')).join('\n');
-  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
-  URL.revokeObjectURL(url);
+  downloadCSV(rows, filename);
 }
 
-
-function selectJournal(fbKey) {
-  if(selectedJournalKey === fbKey) {
-    selectedJournalKey = null;
-    editingJournalKey = null;
-  } else {
-    selectedJournalKey = fbKey;
-    editingJournalKey = null;
-  }
-  renderJournal();
-}
-
-function setJournalFilter(cat) {
-  journalFilter = cat;
-  renderJournal();
-}
-
-function startEditJournal(fbKey) {
-  editingJournalKey = fbKey;
-  renderJournal();
-}
-
-function cancelEditJournal() {
-  editingJournalKey = null;
-  renderJournal();
-}
-
-async function saveJournalEdit() {
-  const ta = document.getElementById('journal-edit-ta');
-  const catEl = document.getElementById('journal-edit-cat');
-  const dateEl = document.getElementById('journal-edit-date');
-  const text = ta?.value.trim();
-  if(!text) return;
-  const cat = catEl?.value || 'life';
-  const entryDate = dateEl?.value || new Date().toISOString().split('T')[0];
-  const entry = objToArr(wsd().journal).find(j => j.fbKey === editingJournalKey);
-  if(!entry) return;
-  setSyncStatus('wait');
-  await fbSet(ref(db, `users/${currentUID}/${ws}/journal/${editingJournalKey}`), {
-    text,
-    createdAt: entry.createdAt,
-    cat,
-    entryDate,
-  });
-  editingJournalKey = null;
-}
-
-function exportJournalCSV() {
-  const entries = objToArr(wsd().journal);
-  if(!entries.length) return;
-  const rows = [['Date','Cat\u00E9gorie','Texte']];
-  entries.forEach(j=>{
-    const d = j.entryDate || new Date(j.createdAt).toLocaleDateString('fr-CA');
-    const cat = JOURNAL_CATS[j.cat||'life']?.label || 'Life';
-    rows.push([d, cat, '"'+j.text.replace(/"/g,'""')+'"']);
-  });
-  const csv = rows.map(r=>r.join(',')).join('\n');
-  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download='journal.csv'; a.click();
-  URL.revokeObjectURL(url);
-}
-
-async function deleteHistory(fbKey) {
-  setSyncStatus('wait');
-  await remove(ref(db,`users/${currentUID}/${ws}/history/${fbKey}`));
-}
+// ---- TRACKER ----
 
 const DEFAULT_TRACKER_BUTTONS = [
-  {key:'badminton', label:'🏸 Badminton', cat:'green'},
-  {key:'marche',    label:'🚶 Marche',     cat:'green'},
-  {key:'gym',       label:'💪 Gym',         cat:'green'},
-  {key:'vaisselle', label:'🍽 Vaisselle',   cat:'green'},
-  {key:'menage',    label:'🧹 Ménage',      cat:'green'},
-  {key:'cuisiner',  label:'👨‍🍳 Cuisiner',   cat:'green'},
-  {key:'restaurant',label:'🍔 Restaurant',  cat:'red'},
-  {key:'binge',     label:'📺 Binge',       cat:'red'},
-  {key:'depanneur', label:'🏪 Dépanneur',   cat:'red'},
-  {key:'alcool',    label:'🍺 Alcool',       cat:'red'},
+  {key:'badminton', label:'🏸 Badminton',       cat:'green'},
+  {key:'marche',    label:'🚶 Walk',             cat:'green'},
+  {key:'gym',       label:'💪 Gym',              cat:'green'},
+  {key:'vaisselle', label:'🍽 Dishes',           cat:'green'},
+  {key:'menage',    label:'🧹 Cleaning',         cat:'green'},
+  {key:'cuisiner',  label:'👨‍🍳 Cooking',         cat:'green'},
+  {key:'restaurant',label:'🍔 Restaurant',       cat:'red'},
+  {key:'binge',     label:'📺 Binge',            cat:'red'},
+  {key:'depanneur', label:'🏪 Convenience store',cat:'red'},
+  {key:'alcool',    label:'🍺 Alcohol',          cat:'red'},
 ];
 
 function getTrackerItems() {
-  // Always start with defaults, then ADD custom Firebase buttons on top
   const custom = objToArr(wsd().tracker_buttons||{}).map(b=>({key:b.key,label:b.label,cat:b.cat,fbKey:b.fbKey,isCustom:true}));
   const defaultKeys = new Set(DEFAULT_TRACKER_BUTTONS.map(d=>d.key));
-  const customNew = custom.filter(c=>!defaultKeys.has(c.key)); // only truly new ones
+  const customNew = custom.filter(c=>!defaultKeys.has(c.key));
   return [...DEFAULT_TRACKER_BUTTONS, ...customNew];
 }
 
-// Epoch anchors — fixed start dates
 const WEEK1_START  = new Date('2026-04-27T04:00:00').getTime();
 const Q1_START     = new Date('2026-04-27T00:00:00').getTime();
 const Q1_DAYS      = 91;
@@ -1137,7 +1225,6 @@ function getCurrentWeekStart() {
 }
 
 function getCurrentQ1Start() {
-  // Find if there are Q archives, if so use the last one's end as new start
   const qArchives = objToArr(wsd().tracker_q_archives||{}).sort((a,b)=>a.startTs-b.startTs);
   if(!qArchives.length) return Q1_START;
   const last = qArchives[qArchives.length-1];
@@ -1155,30 +1242,21 @@ function renderTracker() {
   const weekStart = getCurrentWeekStart();
   const q1Start   = getCurrentQ1Start();
   const q1End     = q1Start + Q1_MS;
-  const q1Label   = 'Quartier 1';
 
-  // Auto-reset Q1 if expired (write archive)
-  if(now >= q1End && !data._flags?.q1Archived) {
-    archiveQ1(q1Start, q1End, entries);
-  }
+  if(now >= q1End && !data._flags?.q1Archived) archiveQ1(q1Start, q1End, entries);
 
   function counts(fromTs, toTs) {
     const c = {};
     ITEMS.forEach(i=>c[i.key]=0);
-    entries.filter(e=>e.ts>=fromTs && (toTs==null||e.ts<toTs)).forEach(e=>{
-      // Count even if key not in current button list (preserves historical data)
-      c[e.key] = (c[e.key]||0) + 1;
-    });
+    entries.filter(e=>e.ts>=fromTs && (toTs==null||e.ts<toTs)).forEach(e=>{ c[e.key] = (c[e.key]||0) + 1; });
     return c;
   }
 
-  const allC    = counts(0);
-  const weekC   = counts(weekStart);
-  const q1C     = counts(q1Start, Math.min(now, q1End));
+  const allC  = counts(0);
+  const weekC = counts(weekStart);
+  const q1C   = counts(q1Start, Math.min(now, q1End));
 
-  function catTotal(c, cat) {
-    return ITEMS.filter(i=>i.cat===cat).reduce((s,i)=>s+(c[i.key]||0),0);
-  }
+  function catTotal(c, cat) { return ITEMS.filter(i=>i.cat===cat).reduce((s,i)=>s+(c[i.key]||0),0); }
 
   const green = ITEMS.filter(i=>i.cat==='green');
   const red   = ITEMS.filter(i=>i.cat==='red');
@@ -1186,8 +1264,7 @@ function renderTracker() {
   function btnGroup(items) {
     return items.map(i=>`
       <button class="tracker-btn ${i.cat}" onclick="APP.logTracker('${i.key}')">
-        ${i.label}
-        <span class="tracker-btn-count">${allC[i.key]}</span>
+        ${i.label}<span class="tracker-btn-count">${allC[i.key]}</span>
       </button>`).join('');
   }
 
@@ -1197,90 +1274,47 @@ function renderTracker() {
     return `<div class="tracker-period-card">
       <div class="tracker-period-title">${title}</div>
       ${subtitle?`<div class="tracker-period-sub">${subtitle}</div>`:''}
-      <div class="tracker-cat-row">
-        <span class="tracker-cat-label green">✅ Positif</span>
-        <span class="tracker-cat-total green">${gTotal}</span>
-      </div>
-      <div class="tracker-item-rows">${green.map(i=>`
-        <div class="tracker-item-row">
-          <span class="tracker-item-name">${i.label}</span>
-          <span class="tracker-item-count">${c[i.key]}</span>
-        </div>`).join('')}
-      </div>
-      <div class="tracker-cat-row" style="margin-top:10px">
-        <span class="tracker-cat-label red">⚠️ À surveiller</span>
-        <span class="tracker-cat-total red">${rTotal}</span>
-      </div>
-      <div class="tracker-item-rows">${red.map(i=>`
-        <div class="tracker-item-row">
-          <span class="tracker-item-name">${i.label}</span>
-          <span class="tracker-item-count">${c[i.key]}</span>
-        </div>`).join('')}
-      </div>
+      <div class="tracker-cat-row"><span class="tracker-cat-label green">✅ Positive</span><span class="tracker-cat-total green">${gTotal}</span></div>
+      <div class="tracker-item-rows">${green.map(i=>`<div class="tracker-item-row"><span class="tracker-item-name">${i.label}</span><span class="tracker-item-count">${c[i.key]}</span></div>`).join('')}</div>
+      <div class="tracker-cat-row" style="margin-top:10px"><span class="tracker-cat-label red">⚠️ To watch</span><span class="tracker-cat-total red">${rTotal}</span></div>
+      <div class="tracker-item-rows">${red.map(i=>`<div class="tracker-item-row"><span class="tracker-item-name">${i.label}</span><span class="tracker-item-count">${c[i.key]}</span></div>`).join('')}</div>
     </div>`;
   }
 
-  // Week number
   const weekNum = Math.floor((weekStart - WEEK1_START) / WEEK_MS) + 1;
-  const weekDateStr = new Date(weekStart).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+  const weekDateStr = new Date(weekStart).toLocaleDateString('en-US',{month:'short',day:'numeric'});
   const q1DaysLeft = Math.max(0, Math.ceil((q1End - now) / 86400000));
-  const q1DateStr = new Date(q1Start).toLocaleDateString('fr-CA',{month:'short',day:'numeric'}) + ' → ' + new Date(q1End).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+  const q1DateStr = new Date(q1Start).toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' → ' + new Date(q1End).toLocaleDateString('en-US',{month:'short',day:'numeric'});
 
-  // Archives section
   let archiveHtml = '';
   if(archives.length || qArchives.length) {
-    archiveHtml = `<div class="tracker-divider"></div>
-    <div class="tracker-archive-section">
-      <div class="tracker-section-title">📦 Archives</div>`;
-
+    archiveHtml = `<div class="tracker-divider"></div><div class="tracker-archive-section"><div class="tracker-section-title">📦 Archives</div>`;
     if(archives.length) {
-      archiveHtml += `<div class="tracker-archive-sub">Semaines</div>`;
+      archiveHtml += `<div class="tracker-archive-sub">Weeks</div>`;
       archiveHtml += archives.map(a=>{
-        const wDate = new Date(a.weekStart).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+        const wDate = new Date(a.weekStart).toLocaleDateString('en-US',{month:'short',day:'numeric'});
         const gT = getTrackerItems().filter(i=>i.cat==='green').reduce((s,i)=>s+(a.counts[i.key]||0),0);
         const rT = getTrackerItems().filter(i=>i.cat==='red').reduce((s,i)=>s+(a.counts[i.key]||0),0);
-        const poidsStr = a.poidsDelta!=null ? (a.poidsDelta>0?'+':'')+a.poidsDelta+'lbs' : '—';
         return `<div class="tracker-archive-card">
-          <div class="tracker-archive-header">
-            <span class="tracker-archive-title">Sem. ${a.weekNum} — ${wDate}</span>
-            <button class="btn-export-sm" onclick="APP.exportTrackerArchiveCSV('${a.fbKey}')">⬇ CSV</button>
-          </div>
-          <div class="tracker-archive-meta">
-            <span class="green-badge">✅ ${gT} positif</span>
-            <span class="red-badge">⚠️ ${rT} surveiller</span>
-            ${a.avgNote!=null?`<span class="note-badge">📝 Note moy: ${a.avgNote}</span>`:''}
-            ${a.poidsDelta!=null?`<span class="poids-badge">⚖️ Poids: ${poidsStr}</span>`:''}
-          </div>
-          <div class="tracker-archive-items">${getTrackerItems().map(i=>`
-            <span class="tracker-arc-item ${i.cat}">${i.label} <strong>${a.counts[i.key]||0}</strong></span>`).join('')}
-          </div>
-          ${a.weekNotes&&a.weekNotes.length?`<div class="tracker-archive-notes"><strong>Notes:</strong> ${a.weekNotes.map(n=>`<div class="arc-note">${n}</div>`).join('')}</div>`:''}
+          <div class="tracker-archive-header"><span class="tracker-archive-title">Wk. ${a.weekNum} — ${wDate}</span><button class="btn-export-sm" onclick="APP.exportTrackerArchiveCSV('${a.fbKey}')">⬇ CSV</button></div>
+          <div class="tracker-archive-meta"><span class="green-badge">✅ ${gT} positive</span><span class="red-badge">⚠️ ${rT} to watch</span>${a.avgNote!=null?`<span class="note-badge">📝 Avg: ${a.avgNote}</span>`:''}${a.poidsDelta!=null?`<span class="poids-badge">⚖️ Weight: ${a.poidsDelta>0?'+':''}${a.poidsDelta} lbs</span>`:''}</div>
+          <div class="tracker-archive-items">${getTrackerItems().map(i=>`<span class="tracker-arc-item ${i.cat}">${i.label} <strong>${a.counts[i.key]||0}</strong></span>`).join('')}</div>
         </div>`;
       }).join('');
     }
-
     if(qArchives.length) {
-      archiveHtml += `<div class="tracker-archive-sub" style="margin-top:14px">Quartiers</div>`;
+      archiveHtml += `<div class="tracker-archive-sub" style="margin-top:14px">Quarters</div>`;
       archiveHtml += qArchives.map(a=>{
-        const dStr = new Date(a.startTs).toLocaleDateString('fr-CA',{month:'short',day:'numeric'}) + ' → ' + new Date(a.endTs).toLocaleDateString('fr-CA',{month:'short',day:'numeric'});
+        const dStr = new Date(a.startTs).toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' → ' + new Date(a.endTs).toLocaleDateString('en-US',{month:'short',day:'numeric'});
         const gT = getTrackerItems().filter(i=>i.cat==='green').reduce((s,i)=>s+(a.counts[i.key]||0),0);
         const rT = getTrackerItems().filter(i=>i.cat==='red').reduce((s,i)=>s+(a.counts[i.key]||0),0);
         return `<div class="tracker-archive-card">
-          <div class="tracker-archive-header">
-            <span class="tracker-archive-title">Q${a.quarterNum} — ${dStr}</span>
-            <button class="btn-export-sm" onclick="APP.exportTrackerQArchiveCSV('${a.fbKey}')">⬇ CSV</button>
-          </div>
-          <div class="tracker-archive-meta">
-            <span class="green-badge">✅ ${gT} positif</span>
-            <span class="red-badge">⚠️ ${rT} surveiller</span>
-          </div>
-          <div class="tracker-archive-items">${getTrackerItems().map(i=>`
-            <span class="tracker-arc-item ${i.cat}">${i.label} <strong>${a.counts[i.key]||0}</strong></span>`).join('')}
-          </div>
+          <div class="tracker-archive-header"><span class="tracker-archive-title">Q${a.quarterNum} — ${dStr}</span><button class="btn-export-sm" onclick="APP.exportTrackerQArchiveCSV('${a.fbKey}')">⬇ CSV</button></div>
+          <div class="tracker-archive-meta"><span class="green-badge">✅ ${gT} positive</span><span class="red-badge">⚠️ ${rT} to watch</span></div>
+          <div class="tracker-archive-items">${getTrackerItems().map(i=>`<span class="tracker-arc-item ${i.cat}">${i.label} <strong>${a.counts[i.key]||0}</strong></span>`).join('')}</div>
         </div>`;
       }).join('');
     }
-
     archiveHtml += '</div>';
   }
 
@@ -1290,54 +1324,47 @@ function renderTracker() {
     const label = item ? item.label : e.key;
     const cat = item ? item.cat : 'green';
     const d = new Date(e.ts);
-    const dateStr = d.toLocaleDateString('fr-CA',{weekday:'short',month:'short',day:'numeric'});
-    const timeStr = d.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'});
-    return `<tr><td style="white-space:nowrap">${dateStr}</td><td style="font-family:'DM Mono',monospace">${timeStr}</td><td><span class="${cat==='green'?'green-badge':'red-badge'}">${label}</span></td></tr>`;
+    return `<tr><td style="white-space:nowrap">${d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</td><td style="font-family:'DM Mono',monospace">${d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</td><td><span class="${cat==='green'?'green-badge':'red-badge'}">${label}</span></td></tr>`;
   }).join('');
-  const logHtml = '<div class="tracker-divider"></div>'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
-    + '<div class="tracker-section-title" style="margin:0">📋 Journal des entrées (' + sortedEntries.length + ')</div>'
-    + (sortedEntries.length ? '<button class="btn-export-sm" onclick="APP.exportTrackerLogCSV()">⬇ Export CSV</button>' : '')
-    + '</div>'
-    + (sortedEntries.length
-        ? '<div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">'
-          + '<table class="checkin-table"><thead><tr><th>Date</th><th>Heure</th><th>Activité</th></tr></thead>'
-          + '<tbody>' + logRows + '</tbody></table></div>'
-        : '<div class="col-empty">Aucune entrée enregistrée</div>');
 
   el.innerHTML = `
-    <div class="tracker-section-title">✅ Positif</div>
+    <div class="tracker-section-title">✅ Positive</div>
     <div class="tracker-btns">${btnGroup(green)}</div>
-    <div class="tracker-section-title" style="margin-top:16px">⚠️ À surveiller</div>
+    <div class="tracker-section-title" style="margin-top:16px">⚠️ To watch</div>
     <div class="tracker-btns">${btnGroup(red)}</div>
-
     <div class="tracker-manage-box">
-      <div class="tracker-manage-title">⚙️ Gérer les boutons</div>
+      <div class="tracker-manage-title">⚙️ Manage buttons</div>
       <div class="tracker-manage-row">
-        <input type="text" id="tb-label" placeholder="Emoji + nom  ex: 🧘 Yoga" class="tracker-manage-input">
+        <input type="text" id="tb-label" placeholder="Emoji + name  e.g. 🧘 Yoga" class="tracker-manage-input">
         <select id="tb-cat" class="tracker-manage-sel">
-          <option value="green">✅ Vert (positif)</option>
-          <option value="red">⚠️ Rouge (à surveiller)</option>
+          <option value="green">✅ Green (positive)</option>
+          <option value="red">⚠️ Red (to watch)</option>
         </select>
-        <button class="btn-tracker-add" onclick="APP.addTrackerBtn()">+ Ajouter</button>
+        <button class="btn-tracker-add" onclick="APP.addTrackerBtn()">+ Add</button>
       </div>
       <div class="tracker-manage-row" style="margin-top:8px">
         <select id="tb-remove-sel" class="tracker-manage-sel" style="flex:1">
-          <option value="">— Supprimer un bouton ajouté —</option>
+          <option value="">— Remove a custom button —</option>
           ${ITEMS.filter(i=>i.fbKey).map(i=>`<option value="${i.fbKey}">${i.label}</option>`).join('')}
         </select>
-        <button class="btn-tracker-del" onclick="APP.removeTrackerBtn()">Supprimer</button>
+        <button class="btn-tracker-del" onclick="APP.removeTrackerBtn()">Remove</button>
       </div>
     </div>
-
     <div class="tracker-divider"></div>
     <div class="tracker-stats-grid">
-      ${periodCard(`📅 Semaine ${weekNum}`, weekC, `depuis le ${weekDateStr}`)}
-      ${periodCard(`📆 ${q1Label}`, q1C, `${q1DateStr} · ${q1DaysLeft}j restants`)}
-      ${periodCard('🗓 Tout le temps', allC)}
+      ${periodCard(`📅 Week ${weekNum}`, weekC, `since ${weekDateStr}`)}
+      ${periodCard(`📆 Quarter 1`, q1C, `${q1DateStr} · ${q1DaysLeft} days left`)}
+      ${periodCard('🗓 All time', allC)}
     </div>
     ${archiveHtml}
-    ${logHtml}`;
+    <div class="tracker-divider"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="tracker-section-title" style="margin:0">📋 Entry log (${sortedEntries.length})</div>
+      ${sortedEntries.length?'<button class="btn-export-sm" onclick="APP.exportTrackerLogCSV()">⬇ Export CSV</button>':''}
+    </div>
+    ${sortedEntries.length
+      ? '<div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:10px"><table class="checkin-table"><thead><tr><th>Date</th><th>Time</th><th>Activity</th></tr></thead><tbody>'+logRows+'</tbody></table></div>'
+      : '<div class="col-empty">No entries recorded</div>'}`;
 }
 
 async function logTracker(key) {
@@ -1345,121 +1372,22 @@ async function logTracker(key) {
   await push(userDataPath(`${ws}/tracker`), {key, ts: Date.now()});
 }
 
-async function archiveWeekTracker() {
-  const entries = objToArr(wsd().tracker||{});
-  const checkinEntries = objToArr(wsd().checkin||{});
-  const weekStart = getCurrentWeekStart();
-  const now = Date.now();
-
-  // Counts for this week
-  const c = {};
-  getTrackerItems().forEach(i=>c[i.key]=0);
-  entries.filter(e=>e.ts>=weekStart && e.ts<now).forEach(e=>{ if(c[e.key]!=null) c[e.key]++; });
-
-  // Weekly checkin notes (daily entries from this week)
-  const weekDailies = checkinEntries
-    .filter(e=>!e.weekly && e.createdAt>=weekStart && e.createdAt<now)
-    .sort((a,b)=>a.createdAt-b.createdAt);
-  const weekNotes = weekDailies.slice(-5).map(e=>{
-    const d = new Date(e.createdAt).toLocaleDateString('fr-CA',{weekday:'short',month:'short',day:'numeric'});
-    const note = e.energie!=null&&e.pensees!=null&&e.corps!=null
-      ? Math.round(((+e.energie + +e.pensees + +e.corps)/3)*100)/100 : null;
-    return `${d}: ${note!=null?note+'avg':''} E:${e.energie??'?'} P:${e.pensees??'?'} C:${e.corps??'?'}`;
-  });
-
-  // Avg note
-  const avgNote = weekDailies.length
-    ? Math.round(weekDailies.filter(e=>e.energie!=null&&e.pensees!=null&&e.corps!=null)
-        .reduce((s,e)=>s+((+e.energie + +e.pensees + +e.corps)/3),0)/weekDailies.length*100)/100
-    : null;
-
-  // Poids delta vs previous week archive
-  const prevArchives = objToArr(wsd().tracker_archives||{}).sort((a,b)=>b.weekStart-a.weekStart);
-  const thisWeekWeekly = checkinEntries.filter(e=>e.weekly && e.createdAt>=weekStart && e.createdAt<now).sort((a,b)=>b.createdAt-a.createdAt);
-  const prevWeekWeekly = checkinEntries.filter(e=>e.weekly && e.createdAt<weekStart).sort((a,b)=>b.createdAt-a.createdAt);
-  const curPoids  = thisWeekWeekly.length && thisWeekWeekly[0].poids!=null ? +thisWeekWeekly[0].poids : null;
-  const prevPoids = prevWeekWeekly.length && prevWeekWeekly[0].poids!=null ? +prevWeekWeekly[0].poids : null;
-  const poidsDelta = curPoids!=null && prevPoids!=null ? Math.round((curPoids-prevPoids)*10)/10 : null;
-
-  const weekNum = Math.floor((weekStart - WEEK1_START) / WEEK_MS) + 1;
-
-  setSyncStatus('wait');
-  await push(userDataPath(`${ws}/tracker_archives`), {
-    weekNum, weekStart, weekEnd: now, counts: c,
-    weekNotes, avgNote, poidsDelta
-  });
-}
-
 async function archiveQ1(startTs, endTs, entries) {
-  // Mark flag immediately to prevent double-archive
   await fbSet(ref(db,`users/${currentUID}/_flags/q1Archived`), true);
-
   const c = {};
   getTrackerItems().forEach(i=>c[i.key]=0);
   entries.filter(e=>e.ts>=startTs && e.ts<endTs).forEach(e=>{ if(c[e.key]!=null) c[e.key]++; });
-
   const qArchives = objToArr(wsd().tracker_q_archives||{});
   const quarterNum = qArchives.length + 1;
-
-  await push(userDataPath(`${ws}/tracker_q_archives`), {
-    quarterNum, startTs, endTs, counts: c
-  });
-
-  // Reset q1 flag so next quarter can be archived
+  await push(userDataPath(`${ws}/tracker_q_archives`), {quarterNum, startTs, endTs, counts: c});
   await fbSet(ref(db,`users/${currentUID}/_flags/q1Archived`), false);
 }
-
-function exportTrackerArchiveCSV(fbKey) {
-  const archives = objToArr(wsd().tracker_archives||{});
-  const a = archives.find(x=>x.fbKey===fbKey);
-  if(!a) return;
-  const rows = [['Item','Catégorie','Nombre']];
-  getTrackerItems().forEach(i=>rows.push([i.label, i.cat==='green'?'Positif':'À surveiller', a.counts[i.key]||0]));
-  if(a.avgNote) rows.push(['Note moyenne semaine','',a.avgNote]);
-  if(a.poidsDelta!=null) rows.push(['Variation poids (lbs)','',a.poidsDelta]);
-  downloadCSV(rows, `tracker-sem${a.weekNum}.csv`);
-}
-
-function exportTrackerQArchiveCSV(fbKey) {
-  const qArchives = objToArr(wsd().tracker_q_archives||{});
-  const a = qArchives.find(x=>x.fbKey===fbKey);
-  if(!a) return;
-  const rows = [['Item','Catégorie','Nombre']];
-  getTrackerItems().forEach(i=>rows.push([i.label, i.cat==='green'?'Positif':'À surveiller', a.counts[i.key]||0]));
-  downloadCSV(rows, `tracker-Q${a.quarterNum}.csv`);
-}
-
-function exportTrackerLogCSV() {
-  const entries = objToArr(wsd().tracker||{}).sort((a,b)=>b.ts-a.ts);
-  if(!entries.length){ alert('Aucune entrée à exporter.'); return; }
-  const ITEMS = getTrackerItems();
-  const rows = [['Date','Heure','Activité','Catégorie']];
-  entries.forEach(e=>{
-    const item = ITEMS.find(i=>i.key===e.key);
-    const label = item ? item.label : e.key;
-    const cat = item ? (item.cat==='green' ? 'Positif' : 'À surveiller') : '';
-    const d = new Date(e.ts);
-    rows.push([d.toLocaleDateString('fr-CA'), d.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'}), label, cat]);
-  });
-  downloadCSV(rows, 'tracker-journal.csv');
-}
-
-function downloadCSV(rows, filename) {
-  const csv = rows.map(r=>r.join(',')).join('\n');
-  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
-  URL.revokeObjectURL(url);
-}
-
-
 
 async function addTrackerBtn() {
   const labelEl = document.getElementById('tb-label');
   const catEl = document.getElementById('tb-cat');
   const label = (labelEl?.value||'').trim();
-  if(!label){ alert('Entre un nom pour le bouton.'); return; }
-  // Stable key: sanitized label + timestamp suffix to avoid collisions
+  if(!label){ alert('Enter a name for the button.'); return; }
   const key = 'custom_' + label.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,15) + '_' + Date.now().toString(36);
   const cat = catEl?.value||'green';
   setSyncStatus('wait');
@@ -1470,122 +1398,60 @@ async function addTrackerBtn() {
 async function removeTrackerBtn() {
   const sel = document.getElementById('tb-remove-sel');
   const fbKey = sel?.value;
-  if(!fbKey){ alert('Choisis un bouton ajouté à supprimer.'); return; }
+  if(!fbKey){ alert('Choose a custom button to remove.'); return; }
   setSyncStatus('wait');
   await remove(ref(db,`users/${currentUID}/${ws}/tracker_buttons/${fbKey}`));
 }
 
-// ---- AUTO WEEKLY REPORT ----
-// Runs on every app load — generates report if Monday 4am has passed and report not yet done
-function checkAutoWeeklyReport() {
-  const now = new Date();
-  const reports = objToArr(wsd().weekly_reports||{});
-
-  // Find the most recent Monday 4am that has passed
-  const d = new Date(now);
-  // Days since last monday: 0=Mon, 1=Tue ... 6=Sun (JS: 0=Sun, 1=Mon...)
-  const dayOfWeek = d.getDay(); // 0=Sun
-  const daysSinceMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  const lastMonday4am = new Date(d);
-  lastMonday4am.setDate(d.getDate() - daysSinceMon);
-  lastMonday4am.setHours(4, 0, 0, 0);
-
-  // If we haven't passed Monday 4am yet this week, use previous Monday
-  if(now < lastMonday4am) {
-    lastMonday4am.setDate(lastMonday4am.getDate() - 7);
-  }
-
-  const reportTs = lastMonday4am.getTime();
-
-  // Only generate if this Monday 4am is after WEEK1_START and no report exists for it
-  if(reportTs < WEEK1_START) return;
-  const alreadyDone = reports.some(r => Math.abs(r.generatedFor - reportTs) < 3600000);
-  if(alreadyDone) return;
-
-  // Generate the report for the 168h window ending at reportTs
-  generateWeeklyReport(reportTs);
+function exportTrackerArchiveCSV(fbKey) {
+  const a = objToArr(wsd().tracker_archives||{}).find(x=>x.fbKey===fbKey);
+  if(!a) return;
+  const rows = [['Item','Category','Count']];
+  getTrackerItems().forEach(i=>rows.push([i.label, i.cat==='green'?'Positive':'To watch', a.counts[i.key]||0]));
+  if(a.avgNote) rows.push(['Weekly average','',a.avgNote]);
+  if(a.poidsDelta!=null) rows.push(['Weight change (lbs)','',a.poidsDelta]);
+  downloadCSV(rows, `tracker-wk${a.weekNum}.csv`);
 }
 
-async function generateWeeklyReport(reportTs) {
-  const windowStart = reportTs - 7 * 86400000; // 168h before Monday 4am
-  const windowEnd   = reportTs;
-
-  const tasks      = objToArr(wsd().tasks||{});
-  const history    = objToArr(wsd().history||{});
-  const journal    = objToArr(wsd().journal||{});
-  const checkin    = objToArr(wsd().checkin||{});
-  const trackerEnt = objToArr(wsd().tracker||{});
-  const ITEMS      = getTrackerItems();
-
-  // Tasks completed in window
-  const completedTasks = history.filter(h=>h.completedAt>=windowStart&&h.completedAt<windowEnd);
-  // Tasks created in window
-  const addedTasks = [...tasks,...history].filter(t=>t.createdAt>=windowStart&&t.createdAt<windowEnd);
-  // Journal entries in window
-  const journalEntries = journal.filter(j=>j.createdAt>=windowStart&&j.createdAt<windowEnd);
-  // Tracker counts
-  const trackerCounts = {};
-  ITEMS.forEach(i=>trackerCounts[i.key]=0);
-  trackerEnt.filter(e=>e.ts>=windowStart&&e.ts<windowEnd).forEach(e=>{ if(trackerCounts[e.key]!=null) trackerCounts[e.key]++; });
-  // Check-in averages
-  const dailies = checkin.filter(e=>!e.weekly&&e.createdAt>=windowStart&&e.createdAt<windowEnd);
-  const avgOf = key => { const v=dailies.filter(e=>e[key]!=null); return v.length?Math.round(v.reduce((s,e)=>s+(+e[key]),0)/v.length*100)/100:null; };
-  const avgEnergie = avgOf('energie');
-  const avgPensees = avgOf('pensees');
-  const avgCorps   = avgOf('corps');
-  const avgNote    = dailies.length
-    ? Math.round(dailies.filter(e=>e.energie!=null&&e.pensees!=null&&e.corps!=null)
-        .reduce((s,e)=>s+((+e.energie+(+e.pensees)+(+e.corps))/3),0)/dailies.length*100)/100
-    : null;
-  // Poids: latest weekly checkin before windowEnd vs week before
-  const weeklyBefore = checkin.filter(e=>e.weekly&&e.createdAt<windowEnd).sort((a,b)=>b.createdAt-a.createdAt);
-  const curPoids  = weeklyBefore[0]?.poids!=null ? +weeklyBefore[0].poids : null;
-  const prevPoids = weeklyBefore[1]?.poids!=null ? +weeklyBefore[1].poids : null;
-  // Poids vs S1 (very first weekly entry)
-  const firstWeekly = checkin.filter(e=>e.weekly&&e.poids!=null).sort((a,b)=>a.createdAt-b.createdAt);
-  const s1Poids = firstWeekly[0]?.poids!=null ? +firstWeekly[0].poids : null;
-
-  const weekNum = Math.floor((reportTs - WEEK1_START) / WEEK_MS) + 1;
-
-  const report = {
-    generatedFor: reportTs,
-    weekNum,
-    windowStart,
-    windowEnd,
-    completedCount: completedTasks.length,
-    addedCount: addedTasks.length,
-    journalCount: journalEntries.length,
-    trackerCounts,
-    trackerItems: ITEMS.map(i=>({key:i.key,label:i.label,cat:i.cat})),
-    avgEnergie, avgPensees, avgCorps, avgNote,
-    curPoids, prevPoids, s1Poids,
-    poidsDeltaWeek: curPoids!=null&&prevPoids!=null ? Math.round((curPoids-prevPoids)*10)/10 : null,
-    poidsDeltaS1:   curPoids!=null&&s1Poids!=null  ? Math.round((curPoids-s1Poids)*10)/10   : null,
-    completedTitles: completedTasks.slice(0,5).map(t=>t.title||''),
-    journalPreviews: journalEntries.slice(0,3).map(j=>(j.text||'').substring(0,80)),
-  };
-
-  setSyncStatus('wait');
-  await push(userDataPath(`${ws}/weekly_reports`), report);
+function exportTrackerQArchiveCSV(fbKey) {
+  const a = objToArr(wsd().tracker_q_archives||{}).find(x=>x.fbKey===fbKey);
+  if(!a) return;
+  const rows = [['Item','Category','Count']];
+  getTrackerItems().forEach(i=>rows.push([i.label, i.cat==='green'?'Positive':'To watch', a.counts[i.key]||0]));
+  downloadCSV(rows, `tracker-Q${a.quarterNum}.csv`);
 }
+
+function exportTrackerLogCSV() {
+  const entries = objToArr(wsd().tracker||{}).sort((a,b)=>b.ts-a.ts);
+  if(!entries.length){ alert('No entries to export.'); return; }
+  const ITEMS = getTrackerItems();
+  const rows = [['Date','Time','Activity','Category']];
+  entries.forEach(e=>{
+    const item = ITEMS.find(i=>i.key===e.key);
+    const label = item ? item.label : e.key;
+    const cat = item ? (item.cat==='green' ? 'Positive' : 'To watch') : '';
+    const d = new Date(e.ts);
+    rows.push([d.toLocaleDateString('en-US'), d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}), label, cat]);
+  });
+  downloadCSV(rows, 'tracker-log.csv');
+}
+
+// ---- DATA ----
 
 function renderData() {
   const el = document.getElementById('panel-data');
   if(!el) return;
   const now = Date.now();
-
   if(now < WEEK1_START) {
-    el.innerHTML = `<div class="data-empty">📊 Les rapports commencent à partir de la semaine 1 (27 avril 2026 à 4h AM).</div>`;
+    el.innerHTML = `<div class="data-empty">📊 Reports start from Week 1 (April 27, 2026 at 4 AM).</div>`;
     return;
   }
-
   const tasks      = objToArr(wsd().tasks||{});
   const history    = objToArr(wsd().history||{});
   const journal    = objToArr(wsd().journal||{});
   const checkin    = objToArr(wsd().checkin||{});
   const trackerEnt = objToArr(wsd().tracker||{});
   const ITEMS      = getTrackerItems();
-
   const totalWeeks = Math.floor((now - WEEK1_START) / WEEK_MS) + 1;
   let html = '';
 
@@ -1593,36 +1459,20 @@ function renderData() {
     const windowStart = WEEK1_START + (weekNum - 1) * WEEK_MS;
     const windowEnd   = Math.min(WEEK1_START + weekNum * WEEK_MS, now);
     const isCurrent   = weekNum === totalWeeks;
-
-    const winStartStr = new Date(windowStart).toLocaleDateString('fr-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    const winEndStr   = isCurrent
-      ? 'maintenant'
-      : new Date(windowEnd).toLocaleDateString('fr-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-
-    // Tâches
+    const winStartStr = new Date(windowStart).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    const winEndStr   = isCurrent ? 'now' : new Date(windowEnd).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
     const completedTasks = history.filter(h=>h.completedAt>=windowStart&&h.completedAt<windowEnd);
     const addedTasks = [...tasks,...history].filter(t=>t.createdAt>=windowStart&&t.createdAt<windowEnd);
-
-    // Journal
     const journalEntries = journal.filter(j=>j.createdAt>=windowStart&&j.createdAt<windowEnd);
-
-    // Tracker
     const trackerCounts = {};
     ITEMS.forEach(i=>trackerCounts[i.key]=0);
     trackerEnt.filter(e=>e.ts>=windowStart&&e.ts<windowEnd).forEach(e=>{ if(trackerCounts[e.key]!=null) trackerCounts[e.key]++; });
-
-    // Check-in
     const dailies = checkin.filter(e=>!e.weekly&&e.createdAt>=windowStart&&e.createdAt<windowEnd);
     const avgOf = key=>{ const v=dailies.filter(e=>e[key]!=null); return v.length?Math.round(v.reduce((s,e)=>s+(+e[key]),0)/v.length*100)/100:null; };
     const avgEnergie = avgOf('energie');
     const avgPensees = avgOf('pensees');
     const avgCorps   = avgOf('corps');
-    const avgNote = dailies.length
-      ? Math.round(dailies.filter(e=>e.energie!=null&&e.pensees!=null&&e.corps!=null)
-          .reduce((s,e)=>s+((+e.energie+(+e.pensees)+(+e.corps))/3),0)/dailies.length*100)/100
-      : null;
-
-    // Poids — dernière entrée hebdomadaire avant la fin de la fenêtre
+    const avgNote = dailies.length ? Math.round(dailies.filter(e=>e.energie!=null&&e.pensees!=null&&e.corps!=null).reduce((s,e)=>s+((+e.energie+(+e.pensees)+(+e.corps))/3),0)/dailies.length*100)/100 : null;
     const weeklyBefore = checkin.filter(e=>e.weekly&&e.createdAt<windowEnd).sort((a,b)=>b.createdAt-a.createdAt);
     const curPoids  = weeklyBefore[0]?.poids!=null ? +weeklyBefore[0].poids : null;
     const prevPoids = weeklyBefore[1]?.poids!=null ? +weeklyBefore[1].poids : null;
@@ -1630,83 +1480,149 @@ function renderData() {
     const s1Poids = firstWeekly[0]?.poids!=null ? +firstWeekly[0].poids : null;
     const poidsDeltaWeek = curPoids!=null&&prevPoids!=null ? Math.round((curPoids-prevPoids)*10)/10 : null;
     const poidsDeltaS1   = curPoids!=null&&s1Poids!=null  ? Math.round((curPoids-s1Poids)*10)/10   : null;
-
     const green = ITEMS.filter(i=>i.cat==='green');
     const red   = ITEMS.filter(i=>i.cat==='red');
     const gTotal = green.reduce((s,i)=>s+(trackerCounts[i.key]||0),0);
     const rTotal = red.reduce((s,i)=>s+(trackerCounts[i.key]||0),0);
 
-    const curPoidsStr  = curPoids!=null ? `<span class="data-poids-badge">⚖️ ${curPoids} lbs</span>` : '';
-    const poidsWeekStr = poidsDeltaWeek!=null
-      ? `<span class="data-poids-badge ${poidsDeltaWeek>0?'pos':'neg'}">${poidsDeltaWeek>0?'+':''}${poidsDeltaWeek} lbs vs sem. précédente</span>` : '';
-    const poidsS1Str = poidsDeltaS1!=null
-      ? `<span class="data-poids-badge ${poidsDeltaS1>0?'pos':'neg'}">${poidsDeltaS1>0?'+':''}${poidsDeltaS1} lbs vs S1</span>` : '';
-
     html += `<div class="data-report-card">
       <div class="data-report-header">
-        <div class="data-report-title">Semaine ${weekNum}${isCurrent?` <span style="font-size:12px;background:var(--blue-light);color:var(--blue-dark);padding:2px 8px;border-radius:10px;font-weight:500">en cours</span>`:''}</div>
+        <div class="data-report-title">Week ${weekNum}${isCurrent?` <span style="font-size:12px;background:var(--blue-light);color:var(--blue-dark);padding:2px 8px;border-radius:10px;font-weight:500">current</span>`:''}</div>
         <div class="data-report-date">${winStartStr} → ${winEndStr}</div>
       </div>
       <div class="data-grid">
-        <div class="data-stat"><div class="data-stat-val">${completedTasks.length}</div><div class="data-stat-lbl">Tâches complétées</div></div>
-        <div class="data-stat"><div class="data-stat-val">${addedTasks.length}</div><div class="data-stat-lbl">Tâches ajoutées</div></div>
-        <div class="data-stat"><div class="data-stat-val">${journalEntries.length}</div><div class="data-stat-lbl">Entrées journal</div></div>
-        <div class="data-stat"><div class="data-stat-val">${avgNote!=null?avgNote:'—'}</div><div class="data-stat-lbl">Note moyenne check-in</div></div>
+        <div class="data-stat"><div class="data-stat-val">${completedTasks.length}</div><div class="data-stat-lbl">Tasks completed</div></div>
+        <div class="data-stat"><div class="data-stat-val">${addedTasks.length}</div><div class="data-stat-lbl">Tasks added</div></div>
+        <div class="data-stat"><div class="data-stat-val">${journalEntries.length}</div><div class="data-stat-lbl">Journal entries</div></div>
+        <div class="data-stat"><div class="data-stat-val">${avgNote!=null?avgNote:'—'}</div><div class="data-stat-lbl">Check-in avg</div></div>
       </div>
       ${avgEnergie!=null||avgPensees!=null||avgCorps!=null?`
-      <div class="data-section-lbl">Check-in moyennes</div>
+      <div class="data-section-lbl">Check-in averages</div>
       <div class="data-tracker-grid">
-        ${avgEnergie!=null?`<span class="data-tracker-pill green">⚡ Énergie: ${avgEnergie}</span>`:''}
-        ${avgPensees!=null?`<span class="data-tracker-pill" style="background:#F3EEF8;color:#6030A0">🧠 Pensées: ${avgPensees}</span>`:''}
-        ${avgCorps!=null?`<span class="data-tracker-pill green">💪 Corps: ${avgCorps}</span>`:''}
+        ${avgEnergie!=null?`<span class="data-tracker-pill green">⚡ Energy: ${avgEnergie}</span>`:''}
+        ${avgPensees!=null?`<span class="data-tracker-pill" style="background:#F3EEF8;color:#6030A0">🧠 Thoughts: ${avgPensees}</span>`:''}
+        ${avgCorps!=null?`<span class="data-tracker-pill green">💪 Body: ${avgCorps}</span>`:''}
       </div>`:''}
-      <div class="data-section-lbl">Poids</div>
-      <div class="data-poids-row">${curPoidsStr}${poidsWeekStr}${poidsS1Str}</div>
-      <div class="data-section-lbl">Tracker — Positif (${gTotal}) / À surveiller (${rTotal})</div>
+      <div class="data-section-lbl">Weight</div>
+      <div class="data-poids-row">
+        ${curPoids!=null?`<span class="data-poids-badge">⚖️ ${curPoids} lbs</span>`:''}
+        ${poidsDeltaWeek!=null?`<span class="data-poids-badge ${poidsDeltaWeek>0?'pos':'neg'}">${poidsDeltaWeek>0?'+':''}${poidsDeltaWeek} lbs vs prev week</span>`:''}
+        ${poidsDeltaS1!=null?`<span class="data-poids-badge ${poidsDeltaS1>0?'pos':'neg'}">${poidsDeltaS1>0?'+':''}${poidsDeltaS1} lbs vs W1</span>`:''}
+      </div>
+      <div class="data-section-lbl">Tracker — Positive (${gTotal}) / To watch (${rTotal})</div>
       <div class="data-tracker-grid">
         ${green.map(i=>`<span class="data-tracker-pill green">${i.label}: ${trackerCounts[i.key]||0}</span>`).join('')}
         ${red.map(i=>`<span class="data-tracker-pill red">${i.label}: ${trackerCounts[i.key]||0}</span>`).join('')}
       </div>
-      ${completedTasks.length?`
-      <div class="data-section-lbl">Tâches complétées</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.8">${completedTasks.slice(0,5).map(t=>`• ${t.title||''}`).join('<br>')}</div>`:''}
+      ${completedTasks.length?`<div class="data-section-lbl">Completed tasks</div><div style="font-size:12px;color:var(--text2);line-height:1.8">${completedTasks.slice(0,5).map(t=>`• ${t.title||''}`).join('<br>')}</div>`:''}
     </div>`;
   }
 
-  el.innerHTML = html || `<div class="data-empty">📊 Aucune donnée disponible pour la semaine en cours.</div>`;
+  el.innerHTML = html || `<div class="data-empty">📊 No data available yet.</div>`;
+}
+
+// ---- AUTO WEEKLY REPORT ----
+
+function checkAutoWeeklyReport() {
+  const now = new Date();
+  const reports = objToArr(wsd().weekly_reports||{});
+  const d = new Date(now);
+  const dayOfWeek = d.getDay();
+  const daysSinceMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const lastMonday4am = new Date(d);
+  lastMonday4am.setDate(d.getDate() - daysSinceMon);
+  lastMonday4am.setHours(4, 0, 0, 0);
+  if(now < lastMonday4am) lastMonday4am.setDate(lastMonday4am.getDate() - 7);
+  const reportTs = lastMonday4am.getTime();
+  if(reportTs < WEEK1_START) return;
+  const alreadyDone = reports.some(r => Math.abs(r.generatedFor - reportTs) < 3600000);
+  if(alreadyDone) return;
+  generateWeeklyReport(reportTs);
+}
+
+async function generateWeeklyReport(reportTs) {
+  const windowStart = reportTs - 7 * 86400000;
+  const windowEnd   = reportTs;
+  const tasks      = objToArr(wsd().tasks||{});
+  const history    = objToArr(wsd().history||{});
+  const journal    = objToArr(wsd().journal||{});
+  const checkin    = objToArr(wsd().checkin||{});
+  const trackerEnt = objToArr(wsd().tracker||{});
+  const ITEMS      = getTrackerItems();
+  const completedTasks = history.filter(h=>h.completedAt>=windowStart&&h.completedAt<windowEnd);
+  const addedTasks = [...tasks,...history].filter(t=>t.createdAt>=windowStart&&t.createdAt<windowEnd);
+  const journalEntries = journal.filter(j=>j.createdAt>=windowStart&&j.createdAt<windowEnd);
+  const trackerCounts = {};
+  ITEMS.forEach(i=>trackerCounts[i.key]=0);
+  trackerEnt.filter(e=>e.ts>=windowStart&&e.ts<windowEnd).forEach(e=>{ if(trackerCounts[e.key]!=null) trackerCounts[e.key]++; });
+  const dailies = checkin.filter(e=>!e.weekly&&e.createdAt>=windowStart&&e.createdAt<windowEnd);
+  const avgOf = key => { const v=dailies.filter(e=>e[key]!=null); return v.length?Math.round(v.reduce((s,e)=>s+(+e[key]),0)/v.length*100)/100:null; };
+  const weeklyBefore = checkin.filter(e=>e.weekly&&e.createdAt<windowEnd).sort((a,b)=>b.createdAt-a.createdAt);
+  const curPoids  = weeklyBefore[0]?.poids!=null ? +weeklyBefore[0].poids : null;
+  const prevPoids = weeklyBefore[1]?.poids!=null ? +weeklyBefore[1].poids : null;
+  const firstWeekly = checkin.filter(e=>e.weekly&&e.poids!=null).sort((a,b)=>a.createdAt-b.createdAt);
+  const s1Poids = firstWeekly[0]?.poids!=null ? +firstWeekly[0].poids : null;
+  const weekNum = Math.floor((reportTs - WEEK1_START) / WEEK_MS) + 1;
+  const report = {
+    generatedFor: reportTs, weekNum, windowStart, windowEnd,
+    completedCount: completedTasks.length, addedCount: addedTasks.length, journalCount: journalEntries.length,
+    trackerCounts, trackerItems: ITEMS.map(i=>({key:i.key,label:i.label,cat:i.cat})),
+    avgEnergie: avgOf('energie'), avgPensees: avgOf('pensees'), avgCorps: avgOf('corps'),
+    avgNote: dailies.length ? Math.round(dailies.filter(e=>e.energie!=null&&e.pensees!=null&&e.corps!=null).reduce((s,e)=>s+((+e.energie+(+e.pensees)+(+e.corps))/3),0)/dailies.length*100)/100 : null,
+    curPoids, prevPoids, s1Poids,
+    poidsDeltaWeek: curPoids!=null&&prevPoids!=null ? Math.round((curPoids-prevPoids)*10)/10 : null,
+    poidsDeltaS1:   curPoids!=null&&s1Poids!=null  ? Math.round((curPoids-s1Poids)*10)/10   : null,
+    completedTitles: completedTasks.slice(0,5).map(t=>t.title||''),
+    journalPreviews: journalEntries.slice(0,3).map(j=>(j.text||'').substring(0,80)),
+  };
+  setSyncStatus('wait');
+  await push(userDataPath(`${ws}/weekly_reports`), report);
+}
+
+// ---- SHARED ----
+
+function downloadCSV(rows, filename) {
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
 }
 
 function renderAll() {
-  if(activeTab==='tasks') renderTasks();
+  if(activeTab==='home') renderHome();
+  else if(activeTab==='tasks') renderTasks();
   else if(activeTab==='cats') renderCats();
   else if(activeTab==='journal') renderJournal();
   else if(activeTab==='history') renderHistory();
-  else if(activeTab==='checkin') renderCheckin();
+  else if(activeTab==='checkin-daily') renderCheckinDaily();
+  else if(activeTab==='checkin-weekly') renderCheckinWeekly();
   else if(activeTab==='tracker') renderTracker();
   else if(activeTab==='data') renderData();
 }
+
+// ---- AUTH ----
 
 onAuthStateChanged(auth, async (user) => {
   if(user) {
     try {
       const emailKey = user.email.replace(/\./g, ',');
-      console.log('[auth] checking access for key:', emailKey);
       const allSnap = await get(ref(db, 'mytasks/allowed_emails'));
-      console.log('[auth] all allowed_emails in DB:', JSON.stringify(allSnap.val()));
       const snap = await get(ref(db, `mytasks/allowed_emails/${emailKey}`));
-      console.log('[auth] allowed_emails snap exists:', snap.exists());
       if(!snap.exists()) {
         signOut(auth);
-        document.getElementById('login-screen').querySelector('.login-note').textContent = 'Accès sur invitation seulement. Contacte Sylvain pour obtenir un accès.';
+        document.getElementById('login-screen').querySelector('.login-note').textContent = 'Access by invitation only. Contact Sylvain for access.';
         return;
       }
     } catch(e) {
       console.error('[auth] access check failed:', e);
       signOut(auth);
-      document.getElementById('login-screen').querySelector('.login-note').textContent = 'Erreur de vérification d\'accès. Réessaie plus tard.';
+      document.getElementById('login-screen').querySelector('.login-note').textContent = 'Access verification failed. Please try again later.';
       return;
     }
     currentUID = user.uid;
+    userModules = null;
+    activeTab = 'home';
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'flex';
     document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || '';
@@ -1714,31 +1630,25 @@ onAuthStateChanged(auth, async (user) => {
     startListening();
   } else {
     currentUID = null;
+    userModules = null;
+    activeTab = 'home';
     data = {vie:{tasks:{},history:{},journal:{}}, _flags:{}};
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app-screen').style.display = 'none';
   }
 });
 
-function exportHistoryCSV() {
-  const hist = objToArr(wsd().history);
-  if(!hist.length){ alert('Aucun historique à exporter.'); return; }
-  const rows = [['Tâche','Note','Catégorie','Créée le','Complétée le','Durée (min)']];
-  hist.forEach(h=>{
-    const cat = cfg().labels[h.cat]||h.cat;
-    const created = new Date(h.createdAt).toLocaleDateString('fr-CA');
-    const completed = new Date(h.completedAt).toLocaleDateString('fr-CA');
-    const dur = Math.round(h.duration/60000);
-    rows.push([`"${(h.title||'').replace(/"/g,'""')}"`,`"${(h.note||'').replace(/"/g,'""')}"`,cat,created,completed,dur]);
-  });
-  const csv = rows.map(r=>r.join(',')).join('\n');
-  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download='historique-taches.csv'; a.click();
-  URL.revokeObjectURL(url);
-}
-
-window.APP = { showTab, addTask, completeTask, deleteTask, saveJournal, deleteJournal, loginGoogle, logout, saveCheckin, setCiTab, selectJournal, setJournalFilter, startEditJournal, cancelEditJournal, saveJournalEdit, exportJournalCSV, exportCheckinCSV, exportHistoryCSV, deleteHistory, deleteCheckin, logTracker, exportTrackerArchiveCSV, exportTrackerQArchiveCSV, exportTrackerLogCSV, addTrackerBtn, removeTrackerBtn };
+window.APP = {
+  showTab, addTask, completeTask, deleteTask,
+  saveJournal, deleteJournal, selectJournal, setJournalFilter,
+  startEditJournal, cancelEditJournal, saveJournalEdit, exportJournalCSV,
+  saveCheckin, deleteCheckin, exportCheckinCSV,
+  logTracker, addTrackerBtn, removeTrackerBtn,
+  exportTrackerArchiveCSV, exportTrackerQArchiveCSV, exportTrackerLogCSV,
+  deleteHistory, exportHistoryCSV,
+  loginGoogle, logout,
+  showModulePicker, hideModulePicker, toggleModule,
+};
 </script>
 </body>
 </html>
