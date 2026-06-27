@@ -480,13 +480,11 @@ const db = getDatabase(firebaseApp);
 const auth = getAuth(firebaseApp);
 const provider = new GoogleAuthProvider();
 
-const JOURNAL_CATS = {
-  life:    { label: 'Life',     bg: '#E8F3FB', c: '#0060A0' },
-  finance: { label: 'Finance',  bg: '#E8FDF2', c: '#1A7A48' },
-  lucie:   { label: 'Lucie',    bg: '#FDE8F3', c: '#A03070' },
-  medical: { label: 'Medical',  bg: '#FDF4E3', c: '#9A6010' },
-  couple:  { label: 'Couple',   bg: '#FFE8ED', c: '#B02040' },
-};
+const CAT_COLORS = [
+  {bg:'#E8F3FB',c:'#0060A0'},{bg:'#E8FDF2',c:'#1A7A48'},{bg:'#FDE8F3',c:'#A03070'},
+  {bg:'#FDF4E3',c:'#9A6010'},{bg:'#FFE8ED',c:'#B02040'},{bg:'#EDE8FD',c:'#5030A0'},
+  {bg:'#FFF3E0',c:'#A05000'},{bg:'#E0F7F0',c:'#006050'},
+];
 
 const MODULES = [
   { id: 'tasks',           label: 'Task List',          desc: 'Add and manage your to-do items.',           icon: '✅' },
@@ -519,6 +517,7 @@ const WS = {
 
 let ws = 'vie', activeTab = 'home', currentUID = null, dbListener = null;
 let userModules = null;
+let journalCats = []; // [{fbKey, label, bg, c}]
 let data = {vie:{tasks:{},history:{},journal:{},checkin:{},tracker:{},tracker_archives:{},tracker_q_archives:{},tracker_buttons:{},weekly_reports:{}}, _flags:{}};
 let selectedJournalKey = null;
 let journalFilter = 'all';
@@ -615,6 +614,7 @@ function startListening() {
       if(!data.vie.tracker_buttons) data.vie.tracker_buttons = {};
       if(!data.vie.weekly_reports) data.vie.weekly_reports = {};
       data._flags = val._flags||{};
+      journalCats = objToArr(val.journal_cats||{}).sort((a,b)=>a.createdAt-b.createdAt);
       const newMods = val.settings?.modules || null;
       const hadModules = userModules !== null;
       userModules = newMods;
@@ -627,6 +627,7 @@ function startListening() {
       data = {vie:{tasks:{},history:{},journal:{},checkin:{},tracker:{},tracker_archives:{},tracker_q_archives:{},tracker_buttons:{},weekly_reports:{}}};
       data._flags = {};
       userModules = null;
+      journalCats = [];
       activeTab = 'home';
     }
     setSyncStatus('ok');
@@ -712,7 +713,7 @@ async function saveJournal() {
   const dateEl = document.getElementById('journal-date');
   const text = ta.value.trim();
   if(!text) return;
-  const cat = catEl?.value || 'life';
+  const cat = catEl?.value || null;
   const entryDate = dateEl?.value || new Date().toISOString().split('T')[0];
   setSyncStatus('wait');
   await push(userDataPath(`${ws}/journal`), {text, createdAt: Date.now(), cat, entryDate});
@@ -820,8 +821,12 @@ function renderJournal() {
   const allEntries = objToArr(wsd().journal);
   const todayISO = localDateISO();
 
-  function jCatPill(cat) {
-    const c = JOURNAL_CATS[cat||'life'];
+  function catById(fbKey) {
+    return journalCats.find(c=>c.fbKey===fbKey) || null;
+  }
+  function jCatPill(catKey) {
+    const c = catById(catKey);
+    if(!c) return '';
     return `<span class="journal-cat-pill" style="background:${c.bg};color:${c.c}">${c.label}</span>`;
   }
   function entryDateISO(j) {
@@ -833,37 +838,65 @@ function renderJournal() {
     return d.toLocaleDateString('en-US', {weekday:'short', year:'numeric', month:'short', day:'numeric'});
   }
 
+  // Reset filter if the filtered cat no longer exists
+  if(journalFilter !== 'all' && !catById(journalFilter)) journalFilter = 'all';
+
   const filteredEntries = journalFilter === 'all'
     ? allEntries
-    : allEntries.filter(j => (j.cat||'life') === journalFilter);
+    : allEntries.filter(j => j.cat === journalFilter);
 
-  const filterBar = `<div class="journal-filter-bar">
+  // Filter bar (only shown if there are categories)
+  const filterBar = journalCats.length ? `<div class="journal-filter-bar">
     <button class="journal-filter-btn${journalFilter==='all'?' active':''}" onclick="APP.setJournalFilter('all')">All (${allEntries.length})</button>
-    ${Object.entries(JOURNAL_CATS).map(([k,v])=>{
-      const n = allEntries.filter(j=>(j.cat||'life')===k).length;
-      return `<button class="journal-filter-btn${journalFilter===k?' active':''}" onclick="APP.setJournalFilter('${k}')">${v.label} (${n})</button>`;
+    ${journalCats.map(c=>{
+      const n = allEntries.filter(j=>j.cat===c.fbKey).length;
+      return `<button class="journal-filter-btn${journalFilter===c.fbKey?' active':''}" onclick="APP.setJournalFilter('${c.fbKey}')" style="border-color:${c.bg}">${c.label} (${n})</button>`;
     }).join('')}
+  </div>` : '';
+
+  // Category manager
+  const catManagerHtml = `<div class="tracker-manage-box" style="margin-bottom:16px">
+    <div class="tracker-manage-title">🏷 Categories</div>
+    ${journalCats.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+      ${journalCats.map(c=>`
+        <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:13px;font-weight:600;background:${c.bg};color:${c.c}">
+          ${c.label}
+          <span onclick="APP.deleteJournalCat('${c.fbKey}')" style="cursor:pointer;opacity:0.6;font-size:11px;line-height:1;padding:1px 2px" title="Remove">✕</span>
+        </span>`).join('')}
+    </div>` : `<div style="font-size:13px;color:var(--text3);margin-bottom:10px">No categories yet.</div>`}
+    <div class="tracker-manage-row">
+      <input type="text" id="jcat-input" placeholder="New category name..." class="tracker-manage-input" onkeydown="if(event.key==='Enter')APP.addJournalCat()">
+      <button class="btn-tracker-add" onclick="APP.addJournalCat()">+ Add</button>
+    </div>
   </div>`;
 
-  const sidebarHtml = filteredEntries.map(j=>`
+  // Sidebar entries (max 10 visible, scrollable)
+  const sidebarEntries = filteredEntries.map(j=>`
     <div class="journal-sidebar-item${selectedJournalKey===j.fbKey?' selected':''}" onclick="APP.selectJournal('${j.fbKey}')">
       <div class="journal-sidebar-date">${entryDateFmt(j)}</div>
-      <div style="margin:3px 0">${jCatPill(j.cat||'life')}</div>
+      ${j.cat ? `<div style="margin:3px 0">${jCatPill(j.cat)}</div>` : ''}
       <div class="journal-sidebar-preview">${j.text.replace(/</g,'&lt;').substring(0,55)}</div>
     </div>`).join('');
 
+  // Entry form cat select
+  const catOpts = journalCats.length
+    ? `<option value="">No category</option>` + journalCats.map(c=>`<option value="${c.fbKey}">${c.label}</option>`).join('')
+    : '';
+
+  // Reader / edit
   const selected = allEntries.find(j => j.fbKey === selectedJournalKey);
   let readerHtml = '';
   if(selected) {
     if(editingJournalKey === selected.fbKey) {
       const iso = entryDateISO(selected);
-      const catOpts = Object.entries(JOURNAL_CATS).map(([k,v])=>
-        `<option value="${k}"${(selected.cat||'life')===k?' selected':''}>${v.label}</option>`).join('');
+      const editCatOpts = journalCats.length
+        ? `<option value="">No category</option>` + journalCats.map(c=>`<option value="${c.fbKey}"${selected.cat===c.fbKey?' selected':''}>${c.label}</option>`).join('')
+        : '';
       const safeText = selected.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       readerHtml = `<div class="journal-reader visible">
         <div class="journal-edit-row">
           <input type="date" id="journal-edit-date" class="journal-edit-date" value="${iso}">
-          <select id="journal-edit-cat" class="journal-edit-cat">${catOpts}</select>
+          ${editCatOpts ? `<select id="journal-edit-cat" class="journal-edit-cat">${editCatOpts}</select>` : ''}
         </div>
         <textarea id="journal-edit-ta" class="journal-edit-ta">${safeText}</textarea>
         <div class="journal-edit-actions">
@@ -875,7 +908,7 @@ function renderJournal() {
       readerHtml = `<div class="journal-reader visible">
         <div class="journal-entry-meta">
           <span class="journal-reader-date">${entryDateFmt(selected)}</span>
-          ${jCatPill(selected.cat||'life')}
+          ${selected.cat ? jCatPill(selected.cat) : ''}
         </div>
         <div class="journal-reader-text">${selected.text.replace(/</g,'&lt;')}</div>
         <div class="journal-item-actions" style="margin-top:14px;gap:8px">
@@ -886,17 +919,15 @@ function renderJournal() {
     }
   }
 
-  const catOpts = Object.entries(JOURNAL_CATS).map(([k,v])=>
-    `<option value="${k}">${v.label}</option>`).join('');
-
   const html = `<div class="journal-layout">
     <div class="journal-main">
+      ${catManagerHtml}
       <div class="journal-entry-box">
         <div class="journal-edit-row">
           <input type="date" id="journal-date" class="journal-edit-date" value="${todayISO}">
-          <select id="journal-cat" class="journal-edit-cat">${catOpts}</select>
+          ${catOpts ? `<select id="journal-cat" class="journal-edit-cat">${catOpts}</select>` : ''}
         </div>
-        <textarea id="journal-ta" placeholder="Write here... thoughts, reflections." onkeydown="if(event.ctrlKey&&event.key==='Enter')APP.saveJournal()" style="width:100%;font-size:19.6px;padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;resize:none;height:120px;line-height:1.7;transition:border-color 0.15s;box-sizing:border-box"></textarea>
+        <textarea id="journal-ta" placeholder="Write here... thoughts, reflections." onkeydown="if(event.ctrlKey&&event.key==='Enter')APP.saveJournal()" style="width:100%;font-size:19.6px;padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;resize:none;height:240px;line-height:1.7;transition:border-color 0.15s;box-sizing:border-box"></textarea>
         <div class="journal-footer">
           <span class="journal-date-lbl">Ctrl+Enter to save</span>
           <button class="btn-save" onclick="APP.saveJournal()">Save</button>
@@ -907,9 +938,13 @@ function renderJournal() {
       ${!filteredEntries.length ? `<div class="empty">${journalFilter==='all'?'No entries yet':'No entries in this category'}</div>` : ''}
     </div>
     <div class="journal-sidebar">
-      <div class="journal-sidebar-title">My Entries</div>
-      ${sidebarHtml}
-      ${allEntries.length ? `<button class="journal-export-btn" onclick="APP.exportJournalCSV()">⬇ Export CSV</button>` : ''}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="journal-sidebar-title" style="margin:0">My Entries</div>
+        ${allEntries.length ? `<button class="journal-export-btn" style="width:auto;padding:5px 12px;margin:0;font-size:13px" onclick="APP.exportJournalCSV()">⬇ CSV</button>` : ''}
+      </div>
+      <div style="overflow-y:auto;max-height:420px;display:flex;flex-direction:column;gap:8px">
+        ${sidebarEntries || `<div style="font-size:13px;color:var(--text3);padding:8px 4px">No entries yet.</div>`}
+      </div>
     </div>
   </div>`;
   el.innerHTML = html;
@@ -930,7 +965,7 @@ async function saveJournalEdit() {
   const dateEl = document.getElementById('journal-edit-date');
   const text = ta?.value.trim();
   if(!text) return;
-  const cat = catEl?.value || 'life';
+  const cat = catEl?.value || null;
   const entryDate = dateEl?.value || new Date().toISOString().split('T')[0];
   const entry = objToArr(wsd().journal).find(j => j.fbKey === editingJournalKey);
   if(!entry) return;
@@ -945,10 +980,33 @@ function exportJournalCSV() {
   const rows = [['Date','Category','Text']];
   entries.forEach(j=>{
     const d = j.entryDate || new Date(j.createdAt).toLocaleDateString('en-US');
-    const cat = JOURNAL_CATS[j.cat||'life']?.label || 'Life';
+    const catObj = journalCats.find(c=>c.fbKey===j.cat);
+    const cat = catObj ? catObj.label : '';
     rows.push([d, cat, '"'+j.text.replace(/"/g,'""')+'"']);
   });
   downloadCSV(rows, 'journal.csv');
+}
+
+async function addJournalCat() {
+  const inp = document.getElementById('jcat-input');
+  const label = (inp?.value||'').trim();
+  if(!label) return;
+  const colorIndex = journalCats.length % CAT_COLORS.length;
+  const {bg, c} = CAT_COLORS[colorIndex];
+  setSyncStatus('wait');
+  await push(ref(db,`users/${currentUID}/journal_cats`), {label, bg, c, createdAt: Date.now()});
+  if(inp) inp.value = '';
+}
+
+async function deleteJournalCat(fbKey) {
+  setSyncStatus('wait');
+  // Clear that category from all entries that use it
+  const entries = objToArr(wsd().journal).filter(j=>j.cat===fbKey);
+  for(const j of entries) {
+    await fbSet(ref(db,`users/${currentUID}/${ws}/journal/${j.fbKey}/cat`), null);
+  }
+  await remove(ref(db,`users/${currentUID}/journal_cats/${fbKey}`));
+  if(journalFilter === fbKey) journalFilter = 'all';
 }
 // ---- RENDER HISTORY ----
 
@@ -1694,6 +1752,7 @@ window.APP = {
   showTab, addTask, completeTask, deleteTask,
   saveJournal, deleteJournal, selectJournal, setJournalFilter,
   startEditJournal, cancelEditJournal, saveJournalEdit, exportJournalCSV,
+  addJournalCat, deleteJournalCat,
   saveCheckin, deleteCheckin, exportCheckinCSV,
   logTracker, addTrackerBtn, removeTrackerBtn,
   exportTrackerArchiveCSV, exportTrackerQArchiveCSV, exportTrackerLogCSV,
