@@ -383,6 +383,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* TAB ADD BUTTON */
 .tab-add{color:var(--blue)!important;border:1.5px dashed var(--blue-mid)!important;border-bottom:none!important;font-size:22px!important;font-weight:300!important;padding:4px 14px!important}
 .tab-add:hover{background:rgba(0,112,186,0.1)!important;border-color:var(--blue)!important;color:var(--blue-dark)!important}
+.tab[draggable]{cursor:grab}
+.tab[draggable]:active{cursor:grabbing}
+.tab.drag-over{background:var(--blue-mid)!important;color:var(--blue-dark)!important;border-color:var(--blue)!important}
+.tab.dragging{opacity:0.4}
 /* HOME PANEL */
 .home-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;text-align:center;gap:16px;min-height:400px}
 .home-empty-icon{font-size:56px}
@@ -662,7 +666,14 @@ function renderTabs() {
   const tabsHtml = mods.map(id => {
     const m = META[id]; if(!m) return '';
     const b = m.badge!=null ? `<span class="badge">${m.badge}</span>` : '';
-    return `<div class="tab${activeTab===id?' active':''}" onclick="APP.showTab('${id}')">${m.label}${b}</div>`;
+    return `<div class="tab${activeTab===id?' active':''}" draggable="true"
+      onclick="APP.showTab('${id}')"
+      ondragstart="APP.tabDragStart(event,'${id}')"
+      ondragover="APP.tabDragOver(event,'${id}')"
+      ondragleave="APP.tabDragLeave(event)"
+      ondrop="APP.tabDrop(event,'${id}')"
+      ondragend="APP.tabDragEnd(event)"
+    >${m.label}${b}</div>`;
   }).join('');
 
   document.getElementById('tabs-row').innerHTML = tabsHtml +
@@ -1638,6 +1649,47 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
+// ---- TAB DRAG REORDER ----
+
+let dragSrcId = null;
+
+function tabDragStart(e, id) {
+  dragSrcId = id;
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function tabDragOver(e, id) {
+  if(id === dragSrcId) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function tabDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function tabDragEnd(e) {
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('drag-over'));
+}
+
+async function tabDrop(e, targetId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(!dragSrcId || dragSrcId === targetId) return;
+  const mods = [...(userModules || [])];
+  const fromIdx = mods.indexOf(dragSrcId);
+  const toIdx   = mods.indexOf(targetId);
+  if(fromIdx === -1 || toIdx === -1) return;
+  mods.splice(fromIdx, 1);
+  mods.splice(toIdx, 0, dragSrcId);
+  userModules = mods;
+  await fbSet(ref(db, `users/${currentUID}/settings/modules`), mods);
+  renderTabs();
+}
+
 window.APP = {
   showTab, addTask, completeTask, deleteTask,
   saveJournal, deleteJournal, selectJournal, setJournalFilter,
@@ -1648,6 +1700,7 @@ window.APP = {
   deleteHistory, exportHistoryCSV,
   loginGoogle, logout,
   showModulePicker, hideModulePicker, toggleModule,
+  tabDragStart, tabDragOver, tabDragLeave, tabDragEnd, tabDrop,
 };
 </script>
 </body>
