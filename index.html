@@ -1704,7 +1704,8 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('app-screen').style.display = 'flex';
     document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || '';
     document.getElementById('user-avatar').src = user.photoURL || '';
-    if (currentUID === AGENT_UID) document.getElementById('btn-agent').style.display = '';
+    const agentSnap = await get(ref(db, `users/${currentUID}/settings/agent_enabled`));
+    if (agentSnap.exists() && agentSnap.val() === true) document.getElementById('btn-agent').style.display = '';
     startListening();
   } else {
     currentUID = null;
@@ -1831,7 +1832,8 @@ function collectLast14Days() {
 }
 
 async function runWellnessAgent() {
-  if (currentUID !== AGENT_UID) return;
+  const agentEnabledSnap = await get(ref(db, `users/${currentUID}/settings/agent_enabled`));
+  if (!agentEnabledSnap.exists() || agentEnabledSnap.val() !== true) return;
 
   setAgentBtn('loading', 'Analyzing...');
 
