@@ -622,7 +622,7 @@ function startListening() {
       } else if(!hadModules || activeTab === 'home' || !userModules.includes(activeTab)) {
         activeTab = userModules[0];
       }
-      migrateLegacyTrackerButtons();
+      repairTrackerButtons();
     } else {
       data = {vie:{tasks:{},history:{},journal:{},checkin:{},tracker:{},tracker_archives:{},tracker_q_archives:{},tracker_buttons:{},weekly_reports:{}}};
       data._flags = {};
@@ -1262,9 +1262,7 @@ function exportCheckinCSV(type) {
 
 // ---- TRACKER ----
 
-const DEFAULT_TRACKER_BUTTONS = [];
-
-// Kept only so migrateLegacyTrackerButtons() can re-create these as normal
+// Kept only so repairTrackerButtons() can re-create these as normal
 // custom buttons for users who already logged entries against them.
 const LEGACY_DEFAULT_TRACKER_BUTTONS = [
   {key:'badminton', label:'🏸 Badminton',       cat:'green'},
@@ -1285,24 +1283,33 @@ const TRACKER_TUTORIAL_EXAMPLES = [
 ];
 
 function getTrackerItems() {
-  const custom = objToArr(wsd().tracker_buttons||{}).map(b=>({key:b.key,label:b.label,cat:b.cat,fbKey:b.fbKey,isCustom:true}));
-  const defaultKeys = new Set(DEFAULT_TRACKER_BUTTONS.map(d=>d.key));
-  const customNew = custom.filter(c=>!defaultKeys.has(c.key));
-  return [...DEFAULT_TRACKER_BUTTONS, ...customNew];
+  const seenKeys = new Set();
+  return objToArr(wsd().tracker_buttons||{})
+    .sort((a,b)=>(a.fbKey||'').localeCompare(b.fbKey||''))
+    .filter(b=>{ if(seenKeys.has(b.key)) return false; seenKeys.add(b.key); return true; })
+    .map(b=>({key:b.key,label:b.label,cat:b.cat,fbKey:b.fbKey,isCustom:true}));
 }
 
-// One-time-per-key migration: if a user already has entries logged against an
-// old default key but never has a matching custom button, silently create one
-// so their history keeps displaying/counting correctly. No-op for new users
-// who never used those keys, and idempotent once migrated.
-function migrateLegacyTrackerButtons() {
-  const entries = objToArr(wsd().tracker||{});
-  if(!entries.length) return;
-  const existingKeys = new Set(objToArr(wsd().tracker_buttons||{}).map(b=>b.key));
-  const usedKeys = new Set(entries.map(e=>e.key));
-  LEGACY_DEFAULT_TRACKER_BUTTONS
-    .filter(d=>usedKeys.has(d.key) && !existingKeys.has(d.key))
-    .forEach(d=>push(userDataPath(`${ws}/tracker_buttons`), {key:d.key, label:d.label, cat:d.cat}));
+// One-time repair, guarded by a persisted flag (same pattern as q1Archived
+// below) so it survives the fact that the top-level onValue listener refires
+// on every write anywhere in the user's data, not just tracker writes:
+//  1. removes duplicate tracker_buttons entries (same `key`, keeping the
+//     earliest) left behind by an earlier buggy version of this migration
+//  2. re-creates a legacy default category as a normal custom button if the
+//     user already has entries logged against it but no button for it
+async function repairTrackerButtons() {
+  if(data._flags?.trackerButtonsRepaired) return;
+  await fbSet(ref(db,`users/${currentUID}/_flags/trackerButtonsRepaired`), true);
+
+  const buttons = objToArr(wsd().tracker_buttons||{}).sort((a,b)=>(a.fbKey||'').localeCompare(b.fbKey||''));
+  const keptKeys = new Set();
+  const dupeFbKeys = [];
+  buttons.forEach(b=>{ if(keptKeys.has(b.key)) dupeFbKeys.push(b.fbKey); else keptKeys.add(b.key); });
+  await Promise.all(dupeFbKeys.map(fbKey=>remove(ref(db,`users/${currentUID}/${ws}/tracker_buttons/${fbKey}`))));
+
+  const usedKeys = new Set(objToArr(wsd().tracker||{}).map(e=>e.key));
+  const toMigrate = LEGACY_DEFAULT_TRACKER_BUTTONS.filter(d=>usedKeys.has(d.key) && !keptKeys.has(d.key));
+  await Promise.all(toMigrate.map(d=>push(userDataPath(`${ws}/tracker_buttons`), {key:d.key, label:d.label, cat:d.cat})));
 }
 
 const WEEK1_START  = new Date('2026-04-27T04:00:00').getTime();
