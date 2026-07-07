@@ -47,7 +47,10 @@
 [data-theme="dark"] .chk{background:var(--surface2)}
 [data-theme="dark"] .mini-chk{background:var(--surface2)}
 [data-theme="dark"] .entry-title-row input,[data-theme="dark"] .entry-bottom-row textarea,[data-theme="dark"] .cat-sel{background:var(--surface2);color:var(--text)}
+[data-theme="dark"] .entry-title-row input:focus,[data-theme="dark"] .entry-bottom-row textarea:focus{background:var(--surface2);color:var(--text)}
 [data-theme="dark"] .journal-entry-box textarea{background:var(--surface2);color:var(--text)}
+[data-theme="dark"] .journal-entry-box textarea:focus{background:var(--surface2)}
+[data-theme="dark"] .ci-field input:focus{background:var(--surface2)}
 [data-theme="dark"] .tracker-manage-input,[data-theme="dark"] .tracker-manage-sel{background:var(--surface2);color:var(--text);border-color:var(--border)}
 [data-theme="dark"] .ci-field input{background:var(--surface2);color:var(--text)}
 [data-theme="dark"] .tracker-btn.green{background:#0D2A1A;border-color:#2A7A50;color:#5DC98A}
@@ -60,6 +63,10 @@
 [data-theme="dark"] .data-tracker-pill.red{background:#2A0D0D;color:#E07060}
 [data-theme="dark"] .tracker-arc-item.green{background:#0D2A1A;color:#5DC98A}
 [data-theme="dark"] .tracker-arc-item.red{background:#2A0D0D;color:#E07060}
+[data-theme="dark"] .journal-cat-pill{filter:brightness(0.55) saturate(1.2)}
+[data-theme="dark"] .data-tracker-pill.purple{background:#1E1030;color:#A87ADD}
+[data-theme="dark"] .data-poids-badge.pos{background:#2A0D0D;color:#E07060}
+[data-theme="dark"] .data-poids-badge.neg{background:#0D2A1A;color:#5DC98A}
 .btn-darkmode{font-size:18px;padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;transition:all 0.15s;line-height:1}
 .btn-darkmode:hover{color:#fff;border-color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.1)}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
@@ -280,6 +287,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .data-tracker-pill{font-size:12px;padding:3px 10px;border-radius:6px;font-weight:600}
 .data-tracker-pill.green{background:#E8FDF2;color:#1A7A48}
 .data-tracker-pill.red{background:#FEF0EE;color:#B02820}
+.data-tracker-pill.purple{background:#F3EEF8;color:#6030A0}
 .data-poids-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .data-poids-badge{font-size:13px;padding:4px 12px;border-radius:8px;font-weight:600;background:var(--surface2);color:var(--text2)}
 .data-poids-badge.pos{background:#FEF0EE;color:#B02820}
@@ -897,7 +905,7 @@ function renderJournal() {
     <div class="tracker-manage-title">🏷 Categories</div>
     ${journalCats.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
       ${journalCats.map(c=>`
-        <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:13px;font-weight:600;background:${c.bg};color:${c.c}">
+        <span class="journal-cat-pill" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:13px;font-weight:600;background:${c.bg};color:${c.c}">
           ${c.label}
           <span onclick="APP.deleteJournalCat('${c.fbKey}')" style="cursor:pointer;opacity:0.6;font-size:11px;line-height:1;padding:1px 2px" title="Remove">✕</span>
         </span>`).join('')}
@@ -1646,7 +1654,7 @@ function renderData() {
       <div class="data-section-lbl">Check-in averages</div>
       <div class="data-tracker-grid">
         ${avgEnergie!=null?`<span class="data-tracker-pill green">⚡ Energy: ${avgEnergie}</span>`:''}
-        ${avgPensees!=null?`<span class="data-tracker-pill" style="background:#F3EEF8;color:#6030A0">🧠 Thoughts: ${avgPensees}</span>`:''}
+        ${avgPensees!=null?`<span class="data-tracker-pill purple">🧠 Thoughts: ${avgPensees}</span>`:''}
         ${avgCorps!=null?`<span class="data-tracker-pill green">💪 Body: ${avgCorps}</span>`:''}
       </div>`:''}
       <div class="data-section-lbl">Weight</div>
