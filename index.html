@@ -1917,6 +1917,18 @@ async function runWellnessAgent() {
   try {
     const { checkins, journals, tracker } = collectLast14Days();
 
+    // Collect user instructions left in the journal (most recent 3, any date)
+    const PREFIX = 'message to wellness agent:';
+    const userInstructions = objToArr(data.vie.journal || {})
+      .filter(e => e.text.trim().toLowerCase().startsWith(PREFIX))
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 3)
+      .map(e => e.text.trim().substring(PREFIX.length).trim());
+
+    const instructionsBlock = userInstructions.length
+      ? `\n\nUSER INSTRUCTIONS (written by Sylvain in his journal — follow these, most recent first):\n${userInstructions.map((t, i) => `${i + 1}. ${t}`).join('\n')}\n`
+      : '';
+
     const systemPrompt = `You are a trusted friend who has been closely watching Sylvain's life for the past year. You know him well:
 
 - He has a boom-bust energy pattern: good days accumulate invisible debt that crashes later. He calls this the "roche" metaphor.
@@ -1938,7 +1950,7 @@ If you do send an email:
 Return ONLY valid JSON in this exact shape:
 {"send_email": true, "subject": "...", "body": "..."}
 or
-{"send_email": false}`;
+{"send_email": false}${instructionsBlock}`;
 
     const userMsg = `Here is Sylvain's last 14 days of data:
 
