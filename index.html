@@ -1126,7 +1126,7 @@ function renderCheckinDaily() {
   }).join('');
 
   // Last 7 trend
-  const last7 = daily.slice(0,7).reverse();
+  const last7 = daily.slice(0,7);
   const trendRows = last7.map(e=>{
     const note = e.energie!=null&&e.pensees!=null&&e.corps!=null ? Math.round(((+e.energie + +e.pensees + +e.corps)/3)*100)/100 : null;
     const d = new Date(e.createdAt).toLocaleDateString('en-US',{weekday:'short',day:'numeric'});
